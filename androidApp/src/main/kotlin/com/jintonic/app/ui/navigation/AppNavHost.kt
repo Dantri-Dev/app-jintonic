@@ -12,6 +12,7 @@ import com.jintonic.app.ui.health.HealthScreen
 import com.jintonic.app.ui.health.HealthViewModel
 import com.jintonic.app.ui.history.HistoryScreen
 import com.jintonic.app.ui.home.HomeScreen
+import com.jintonic.app.ui.onboarding.OnboardingScreen
 import com.jintonic.app.ui.test_flow.PreTestScreen
 import com.jintonic.app.ui.test_flow.PvtScreen
 import com.jintonic.app.ui.test_flow.ResultScreen
@@ -19,7 +20,11 @@ import com.jintonic.app.ui.test_flow.TestFlowViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun AppNavHost() {
+fun AppNavHost(
+    heartRatePermission: String,
+    hasPermission: Boolean,
+    onPermissionResult: (Boolean) -> Unit,
+) {
     val nav = rememberSwipeDismissableNavController()
     // Activity-scoped: shared by the screens of each flow.
     val testVm: TestFlowViewModel = koinViewModel()
@@ -31,7 +36,19 @@ fun AppNavHost() {
     }
 
     AppScaffold {
-        SwipeDismissableNavHost(navController = nav, startDestination = Routes.HOME) {
+        SwipeDismissableNavHost(
+            navController = nav,
+            startDestination = if (hasPermission) Routes.HOME else Routes.ONBOARDING,
+        ) {
+            composable(Routes.ONBOARDING) {
+                OnboardingScreen(
+                    heartRatePermission = heartRatePermission,
+                    onPermissionResult = onPermissionResult,
+                    onContinue = {
+                        nav.navigate(Routes.HOME) { popUpTo(Routes.ONBOARDING) { inclusive = true } }
+                    },
+                )
+            }
             composable(Routes.HOME) {
                 HomeScreen(
                     onStartTest = { startTest(PvtMode.DEMO, withPreTest = true) },

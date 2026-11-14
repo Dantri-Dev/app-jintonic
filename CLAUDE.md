@@ -25,6 +25,14 @@ These are the intended conventions as code grows — the project is currently a 
   ViewModel per screen, or one per flow whose pages share it). The Apple side talks to `shared` only
   through a single DI entry point (`PlatformModule`): one operation per use-case operation,
   `async throws` on networked ones, `StateFlow` properties for observable state.
+- **Empty states (Android)**: every empty state shows a Material Icons **Outlined** icon above its
+  text (the `EmptyState` component). Outlined family only — no filled icons.
+- **Tappables (Android)**: every tappable (buttons, edge buttons, steppers, selectable items) goes
+  through the shared interaction helpers — press bounce, 300 ms debounce, and haptic on each accepted
+  tap — never a bare Material `onClick`.
+- **Comments are agnostic**: describe what the code does and the invariant it keeps, never its
+  history or sources. No references to mockups, CSS, design specs, API-level trivia, tickets, or
+  "it was like this before / I read it here". If a line only justifies a past decision, delete it.
 - **Style**: comments minimal (max 3 lines, no essays); multi-word packages are `snake_case`
   (`forgot_password`, `use_cases`) in both `shared` and `androidApp`; one constants file per module
   (`shared` / `androidApp` `core/Constants.kt`, watchOS `Core/Constants.swift`). Apps log only through

@@ -25,6 +25,7 @@ dependencies {
     implementation(libs.wear.compose.material3)
     implementation(libs.wear.compose.foundation)
     implementation(libs.wear.compose.navigation)
+    implementation(libs.compose.material.icons.extended)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
@@ -75,8 +76,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    // Fonts shared with watchOS live in the shared module (single copy).
-    sourceSets["main"].res.directories += "../shared/design/res"
     buildFeatures {
         compose = true
         buildConfig = true

@@ -2,11 +2,10 @@ package com.jintonic.app.ui.theme
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material3.ColorScheme
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Typography
@@ -28,45 +27,23 @@ object FfdColors {
     val AccentSoft = Color(ColorRoles.ACCENT_SOFT)
     val AccentStrong = Color(ColorRoles.ACCENT_STRONG)
     val TextSecondary = Color(ColorRoles.TEXT_SECONDARY)
-    val LabelTop = Color(ColorRoles.LABEL)
-    val LabelBottom = Color(ColorRoles.TEXT_SECONDARY)
-    val PillContainer = Color(ColorRoles.PILL_CONTAINER)
-    val PillContent = Color(ColorRoles.PILL_CONTENT)
-    val Surface = Color(ColorRoles.SURFACE)
 }
 
-// Google Sans Flex (OFL), static weights from shared/design/res/font.
+// Shared dimensions that Material does not provide out of the box.
+object FfdSizes {
+    val Ring = 92.dp
+    val RingStroke = 8.dp
+    val Stimulus = 72.dp
+    val StimulusGlow = 20.dp
+}
+
+// Google Sans Flex (OFL), applied to the whole typography through the theme.
 val GoogleSansFlex = FontFamily(
     Font(R.font.google_sans_flex_regular, FontWeight.Normal),
     Font(R.font.google_sans_flex_medium, FontWeight.Medium),
     Font(R.font.google_sans_flex_semibold, FontWeight.SemiBold),
     Font(R.font.google_sans_flex_bold, FontWeight.Bold),
 )
-
-object FfdSizes {
-    // CSS says 100px, but on the round 192dp face it collides with the top label: 92dp (deliberate delta).
-    val RingDiameter = 92.dp
-    val RingStroke = 6.dp
-    val StimulusDiameter = 70.dp
-    val StimulusGlow = 20.dp
-    val PillRadius = 20.dp
-    val PillPaddingH = 15.dp
-    val PillPaddingV = 6.dp
-    val ScreenGap = 8.dp // CSS gap 10px, tightened for the round face
-    val PillHeight = 28.dp // .btn: 6px + 11px*1.3 + 6px; M3 default would be 52dp
-}
-
-object FfdType {
-    val RingNumber = 32.sp // .ring .n, weight 700
-    val RingLabel = 8.5.sp // .ring .l, uppercase, .08em
-    val Title = 14.sp // .t, weight 600
-    val Body = 10.5.sp // .s
-    val Pill = 11.sp // .btn, weight 600
-    val TopLabel = 9.sp // .top, uppercase, .07em
-    val BottomLabel = 10.sp // .bot
-    val Faces = 19.sp // .faces
-    val Streak = 10.sp // .fire
-}
 
 fun Status.color(): Color = when (this) {
     Status.GREEN -> FfdColors.LevelHigh
@@ -97,7 +74,7 @@ fun HealthParameter.label(): String = when (this) {
     HealthParameter.MOOD -> "Umore"
 }
 
-// Wear Material scheme rebuilt on the shared palette, so default components (cards, tonal buttons, switches) match.
+// Wear Material scheme rebuilt on the shared palette, so default components (cards, buttons, switches) match.
 private val FfdColorScheme = ColorScheme(
     primary = Color(ColorRoles.PRIMARY),
     primaryDim = Color(Palette.Blue.B600),

@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -19,14 +21,14 @@ import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material3.Card
+import androidx.wear.compose.material3.ListHeader
+import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import com.jintonic.app.core.states.ResultState
 import com.jintonic.app.data.SessionRecord
 import com.jintonic.app.pvt.Status
-import com.jintonic.app.ui.components.BodyText
-import com.jintonic.app.ui.components.TopLabel
-import com.jintonic.app.ui.theme.FfdType
+import com.jintonic.app.ui.components.EmptyState
 import com.jintonic.app.ui.theme.FfdColors
 import com.jintonic.app.ui.theme.color
 import org.koin.compose.viewmodel.koinViewModel
@@ -40,11 +42,12 @@ private val DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM HH:mm")
 fun HistoryScreen(vm: HistoryViewModel = koinViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val sessions = (state as? ResultState.Success)?.data.orEmpty()
-    val listState = rememberScalingLazyListState(initialCenterItemIndex = 0)
-    ScreenScaffold(scrollState = listState, timeText = { TopLabel("Storico") }) {
-        ScalingLazyColumn(state = listState, modifier = Modifier.fillMaxWidth(), contentPadding = it) {
+    val listState = rememberScalingLazyListState()
+    ScreenScaffold(scrollState = listState) { contentPadding ->
+        ScalingLazyColumn(state = listState, modifier = Modifier.fillMaxWidth(), contentPadding = contentPadding) {
+            item { ListHeader { Text("Storico") } }
             if (sessions.isEmpty()) {
-                item { BodyText("Nessuna sessione. Fai il primo test dalla Home.") }
+                item { EmptyState(Icons.Outlined.History, "Nessuna sessione. Fai il primo test dalla Home.") }
             }
             items(sessions) { SessionCard(it) }
         }
@@ -60,14 +63,20 @@ private fun SessionCard(session: SessionRecord) {
             Column {
                 Text(
                     text = "Cognitivo ${session.cognitiveScore}",
-                    fontSize = FfdType.Title,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                 )
                 val time = Instant.ofEpochMilli(session.timestampMs).atZone(ZoneId.systemDefault()).format(DATE_FORMAT)
-                Text(time, fontSize = FfdType.Body, color = FfdColors.TextSecondary)
-                session.readinessScore?.let { Text("Readiness $it", fontSize = FfdType.Body, color = FfdColors.TextSecondary) }
-                if (session.escalated) Text("Escalation", fontSize = FfdType.Body, color = FfdColors.AccentStrong)
-                if (session.pendingSync) Text("In coda per la Terra", fontSize = FfdType.Body, color = FfdColors.AccentSoft)
+                Text(time, style = MaterialTheme.typography.bodySmall, color = FfdColors.TextSecondary)
+                session.readinessScore?.let {
+                    Text("Readiness $it", style = MaterialTheme.typography.bodySmall, color = FfdColors.TextSecondary)
+                }
+                if (session.escalated) {
+                    Text("Escalation", style = MaterialTheme.typography.bodySmall, color = FfdColors.AccentStrong)
+                }
+                if (session.pendingSync) {
+                    Text("In coda per la Terra", style = MaterialTheme.typography.bodySmall, color = FfdColors.AccentSoft)
+                }
             }
         }
     }

@@ -64,3 +64,5 @@ Icon
 *.tmp
 local
 PLAN.md
+.claude
+.agents

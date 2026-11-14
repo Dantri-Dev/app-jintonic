@@ -37,7 +37,6 @@ object AppConstants {
     const val SLEEP_MAX_HOURS = 12f
     const val SLEEP_DEFAULT_HOURS = 7f
     const val MOOD_DEFAULT = 3
-    const val STIMULUS_SIZE_DP = 96
 
     // --- Haptic breathing pulses ---
     const val INHALE_PULSE_MS = 350L

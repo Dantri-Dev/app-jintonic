@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -17,19 +19,20 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material3.CircularProgressIndicator
 import androidx.wear.compose.material3.ScreenScaffold
+import androidx.wear.compose.material3.Text
 import com.jintonic.app.advice.AdviceMessages
 import com.jintonic.app.assessment.CognitiveAssessment
 import com.jintonic.app.core.states.ResultState
 import com.jintonic.app.pvt.Status
-import com.jintonic.app.ui.components.BodyText
-import com.jintonic.app.ui.components.MenuButton
-import com.jintonic.app.ui.components.ScoreRing
-import com.jintonic.app.ui.components.TopLabel
+import com.jintonic.app.ui.components.AppEdgeButton
+import com.jintonic.app.ui.components.AppFilledTonalButton
+import com.jintonic.app.ui.components.CenteredColumn
+import com.jintonic.app.ui.components.EmptyState
+import com.jintonic.app.ui.components.Hint
+import com.jintonic.app.ui.components.ScoreArc
 import com.jintonic.app.ui.theme.FfdColors
-import com.jintonic.app.ui.theme.FfdSizes
 import com.jintonic.app.ui.theme.color
 
-// Headline copy per outcome, verbatim from the mockup; the engine's full advice follows below.
 private fun Status.headline(): String = when (this) {
     Status.GREEN -> "Sei pronto. Buon lavoro."
     Status.YELLOW -> "Fai una pausa di 10 minuti."
@@ -39,62 +42,49 @@ private fun Status.headline(): String = when (this) {
 @Composable
 fun ResultScreen(vm: TestFlowViewModel, onDone: () -> Unit, onRetry: () -> Unit, onHistory: () -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val scroll = rememberScrollState()
-    ScreenScaffold(scrollState = scroll, timeText = { TopLabel("Risultato") }) {
+    val listState = rememberLazyListState()
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    ScreenScaffold(
+        scrollState = listState,
+        edgeButton = { AppEdgeButton(onClick = onDone) { Text("Fatto") } },
+    ) { contentPadding ->
         when (val s = state) {
-            is ResultState.Success -> Column(
-                modifier = Modifier.verticalScroll(scroll),
+            is ResultState.Success -> LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = contentPadding,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                ResultHero(s.data.cognitive)
-                ResultDetails(s.data.cognitive, onDone, onRetry, onHistory)
+                val cognitive = s.data.cognitive
+                item {
+                    Box(modifier = Modifier.fillMaxWidth().height(screenHeight), contentAlignment = Alignment.Center) {
+                        ScoreArc(score = cognitive.score, label = "Cognitivo", caption = "", color = cognitive.status.color())
+                    }
+                }
+                item { ResultDetails(cognitive, onRetry, onHistory) }
             }
-            is ResultState.Failure -> CenteredBox { BodyText(s.message, color = FfdColors.AccentStrong) }
-            else -> CenteredBox { CircularProgressIndicator() }
+            is ResultState.Failure -> CenteredColumn {
+                EmptyState(Icons.Outlined.ErrorOutline, s.message, tint = FfdColors.AccentStrong)
+            }
+            else -> CenteredColumn { CircularProgressIndicator() }
         }
     }
 }
 
 @Composable
-private fun ResultHero(cognitive: CognitiveAssessment) {
-    CenteredBox {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(FfdSizes.ScreenGap),
-            modifier = Modifier.padding(horizontal = 20.dp),
-        ) {
-            ScoreRing(score = cognitive.score, caption = "Cognitivo", ringColor = cognitive.status.color())
-            BodyText(cognitive.status.headline())
-        }
-    }
-}
-
-@Composable
-private fun ResultDetails(
-    cognitive: CognitiveAssessment,
-    onDone: () -> Unit,
-    onRetry: () -> Unit,
-    onHistory: () -> Unit,
-) {
+private fun ResultDetails(cognitive: CognitiveAssessment, onRetry: () -> Unit, onHistory: () -> Unit) {
+    val headline = cognitive.status.headline()
     Column(
-        modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 40.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 8.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (cognitive.escalateToSurgeon) BodyText("«Contatta il flight surgeon»", color = FfdColors.AccentStrong)
-        if (cognitive.perceivedMismatch) BodyText("«Ti senti bene, ma i riflessi dicono il contrario»", color = FfdColors.AccentSoft)
-        if (cognitive.sleepWarning) BodyText("Sonno insufficiente", color = FfdColors.AccentSoft)
-        cognitive.advice.forEach { BodyText(AdviceMessages.text(it)) }
-        MenuButton("Fatto", onClick = onDone)
-        MenuButton("Rifai", onClick = onRetry)
-        MenuButton("Storico", onClick = onHistory)
+        Hint(headline, color = FfdColors.OnBackground)
+        if (cognitive.escalateToSurgeon) Hint("Contatta il flight surgeon", color = FfdColors.AccentStrong)
+        if (cognitive.perceivedMismatch) Hint("Ti senti bene, ma i riflessi dicono il contrario", color = FfdColors.AccentSoft)
+        if (cognitive.sleepWarning) Hint("Sonno insufficiente", color = FfdColors.AccentSoft)
+        cognitive.advice.map { AdviceMessages.text(it) }.filter { it != headline }.forEach { Hint(it) }
+        AppFilledTonalButton(onClick = onRetry, modifier = Modifier.fillMaxWidth()) { Text("Rifai") }
+        AppFilledTonalButton(onClick = onHistory, modifier = Modifier.fillMaxWidth()) { Text("Storico") }
     }
-}
-
-@Composable
-private fun CenteredBox(content: @Composable () -> Unit) {
-    Box(
-        modifier = Modifier.fillMaxWidth().height(LocalConfiguration.current.screenHeightDp.dp),
-        contentAlignment = Alignment.Center,
-    ) { content() }
 }

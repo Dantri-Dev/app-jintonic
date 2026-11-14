@@ -17,7 +17,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.ScalingLazyListScope
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
-import androidx.wear.compose.material3.FilledTonalIconButton
+import androidx.wear.compose.material3.ListHeader
+import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SwitchButton
 import androidx.wear.compose.material3.Text
@@ -25,11 +26,11 @@ import com.jintonic.app.core.states.ResultState
 import com.jintonic.app.data.HealthView
 import com.jintonic.app.data.ManualEntry
 import com.jintonic.app.data.sensors.HrSource
-import com.jintonic.app.ui.components.BodyText
-import com.jintonic.app.ui.components.InfoRow
-import com.jintonic.app.ui.components.TopLabel
-import com.jintonic.app.ui.theme.FfdType
 import com.jintonic.app.scoring.CognitiveScoring
+import com.jintonic.app.ui.components.AppIconButton
+import com.jintonic.app.ui.components.Hint
+import com.jintonic.app.ui.components.InfoRow
+import com.jintonic.app.ui.components.hapticToggle
 import com.jintonic.app.ui.theme.FfdColors
 import com.jintonic.app.ui.theme.color
 import com.jintonic.app.ui.theme.label
@@ -40,11 +41,12 @@ import com.jintonic.app.vitals.HealthParameter
 fun HealthScreen(vm: HealthViewModel) {
     val state by vm.state.collectAsStateWithLifecycle()
     val view = (state as? ResultState.Success)?.data
-    val listState = rememberScalingLazyListState(initialCenterItemIndex = 0)
-    ScreenScaffold(scrollState = listState, timeText = { TopLabel("Parametri") }) {
-        ScalingLazyColumn(state = listState, modifier = Modifier.fillMaxWidth(), contentPadding = it) {
+    val listState = rememberScalingLazyListState()
+    ScreenScaffold(scrollState = listState) { contentPadding ->
+        ScalingLazyColumn(state = listState, modifier = Modifier.fillMaxWidth(), contentPadding = contentPadding) {
+            item { ListHeader { Text("Parametri") } }
             if (view == null) {
-                item { BodyText("Lettura in corso…") }
+                item { Hint("Lettura in corso…") }
             } else {
                 vitalsItems(view, vm)
                 manualItems(view, vm)
@@ -74,7 +76,7 @@ private fun ScalingLazyListScope.vitalsItems(view: HealthView, vm: HealthViewMod
     item {
         SwitchButton(
             checked = view.snapshot.crashActive,
-            onCheckedChange = vm::setSpo2Crash,
+            onCheckedChange = hapticToggle(vm::setSpo2Crash),
             modifier = Modifier.fillMaxWidth(),
         ) { Text("Simula calo SpO2") }
     }
@@ -82,7 +84,7 @@ private fun ScalingLazyListScope.vitalsItems(view: HealthView, vm: HealthViewMod
 
 private fun ScalingLazyListScope.manualItems(view: HealthView, vm: HealthViewModel) {
     val m = view.manual
-    item { BodyText("Inserimento manuale", color = FfdColors.LabelTop) }
+    item { ListHeader { Text("Inserimento manuale") } }
     item {
         StepperLine("Glicemia", m.glucoseMgDl?.let { "$it mg/dL" }, view.levelOf(HealthParameter.GLUCOSE)) { delta ->
             vm.updateManual { it.copy(glucoseMgDl = ((it.glucoseMgDl ?: GLUCOSE_DEFAULT) + delta * GLUCOSE_STEP).coerceIn(0, GLUCOSE_MAX)) }
@@ -115,21 +117,21 @@ private fun stepRadiation(entry: ManualEntry, delta: Int): Double {
 @Composable
 private fun StepperLine(label: String, value: String?, level: AlertLevel?, onStep: (Int) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, fontSize = FfdType.Body, color = FfdColors.TextSecondary)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = FfdColors.TextSecondary)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilledTonalIconButton(
+            AppIconButton(
                 onClick = { onStep(-1) },
-                modifier = Modifier.size(28.dp).semantics { contentDescription = "Diminuisci $label" },
+                modifier = Modifier.size(32.dp).semantics { contentDescription = "Diminuisci $label" },
             ) { Text("−") }
             Text(
                 value ?: "non inserito",
-                fontSize = FfdType.Title,
+                style = MaterialTheme.typography.titleMedium,
                 color = level?.color() ?: FfdColors.OnBackground,
                 fontWeight = FontWeight.SemiBold,
             )
-            FilledTonalIconButton(
+            AppIconButton(
                 onClick = { onStep(1) },
-                modifier = Modifier.size(28.dp).semantics { contentDescription = "Aumenta $label" },
+                modifier = Modifier.size(32.dp).semantics { contentDescription = "Aumenta $label" },
             ) { Text("+") }
         }
     }

@@ -21,14 +21,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.ScalingLazyListScope
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
+import androidx.wear.compose.material3.ListHeader
+import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SwitchButton
 import androidx.wear.compose.material3.Text
 import com.jintonic.app.core.states.ResultState
 import com.jintonic.app.data.HealthView
-import com.jintonic.app.ui.components.BodyText
-import com.jintonic.app.ui.components.MenuButton
-import com.jintonic.app.ui.components.TopLabel
+import com.jintonic.app.ui.components.AppEdgeButton
+import com.jintonic.app.ui.components.AppFilledTonalButton
+import com.jintonic.app.ui.components.Hint
+import com.jintonic.app.ui.components.hapticToggle
 import com.jintonic.app.ui.health.HealthViewModel
 import com.jintonic.app.ui.theme.FfdColors
 import com.jintonic.app.ui.theme.color
@@ -50,17 +53,20 @@ fun EmergencyScreen(
     val state by healthVm.state.collectAsStateWithLifecycle()
     val phase by vm.phase.collectAsStateWithLifecycle()
     val view = (state as? ResultState.Success)?.data
-    val listState = rememberScalingLazyListState(initialCenterItemIndex = 0)
+    val listState = rememberScalingLazyListState()
     DisposableEffect(Unit) { onDispose { vm.stopBreathing() } }
-    ScreenScaffold(scrollState = listState, timeText = { TopLabel("Emergenza") }) {
-        ScalingLazyColumn(state = listState, modifier = Modifier.fillMaxWidth(), contentPadding = it) {
+    ScreenScaffold(
+        scrollState = listState,
+        edgeButton = { AppEdgeButton(onClick = onQuickTest) { Text("Test rapido 30 s") } },
+    ) { contentPadding ->
+        ScalingLazyColumn(state = listState, modifier = Modifier.fillMaxWidth(), contentPadding = contentPadding) {
+            item { ListHeader { Text("Emergenza") } }
             if (view != null) triageItems(view)
             item { BreathingItem(phase, view?.assessment?.breathingGuide ?: BreathingGuide(), vm) }
-            item { MenuButton("Test rapido 30 s", onClick = onQuickTest) }
             item {
                 SwitchButton(
                     checked = view?.snapshot?.crashActive == true,
-                    onCheckedChange = healthVm::setSpo2Crash,
+                    onCheckedChange = hapticToggle(healthVm::setSpo2Crash),
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text("Simula calo SpO2") }
             }
@@ -74,15 +80,16 @@ private fun ScalingLazyListScope.triageItems(view: HealthView) {
         Text(
             text = if (a.triage) "TRIAGE ATTIVO" else "Parametri: ${a.overallLevel.label()}",
             color = if (a.triage) FfdColors.AccentStrong else a.overallLevel.color(),
+            style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
     }
-    item { BodyText(timeToCriticalText(view.minutesToCritical)) }
-    item { BodyText("HR ${view.snapshot.hrBpm ?: "--"} bpm · SpO2 ${view.snapshot.spo2Pct}%") }
+    item { Hint(timeToCriticalText(view.minutesToCritical)) }
+    item { Hint("HR ${view.snapshot.hrBpm ?: "--"} bpm · SpO2 ${view.snapshot.spo2Pct}%") }
     a.readings.filter { it.level == AlertLevel.CRITICAL }.forEach { reading ->
-        item { BodyText("Critico: ${reading.parameter.label()}", color = FfdColors.AccentStrong) }
+        item { Hint("Critico: ${reading.parameter.label()}", color = FfdColors.AccentStrong) }
     }
 }
 
@@ -98,14 +105,20 @@ private fun BreathingItem(phase: BreathPhase, guide: BreathingGuide, vm: Emergen
     val duration = (if (phase == BreathPhase.INHALE) guide.inhaleSec else guide.exhaleSec) * MS_PER_SEC
     val scale by animateFloatAsState(target, tween(duration), label = "breath")
     if (phase == BreathPhase.IDLE) {
-        MenuButton("Respirazione guidata", accent = FfdColors.Primary) { vm.startBreathing(guide) }
+        AppFilledTonalButton(onClick = { vm.startBreathing(guide) }, modifier = Modifier.fillMaxWidth()) {
+            Text("Respirazione guidata")
+        }
         return
     }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.size(110.dp)) {
             Box(Modifier.size(100.dp).scale(scale).border(6.dp, FfdColors.Primary, CircleShape))
-            Text(if (phase == BreathPhase.INHALE) "Inspira" else "Espira", fontWeight = FontWeight.SemiBold)
+            Text(
+                if (phase == BreathPhase.INHALE) "Inspira" else "Espira",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+            )
         }
-        MenuButton("Stop") { vm.stopBreathing() }
+        AppFilledTonalButton(onClick = { vm.stopBreathing() }, modifier = Modifier.fillMaxWidth()) { Text("Stop") }
     }
 }

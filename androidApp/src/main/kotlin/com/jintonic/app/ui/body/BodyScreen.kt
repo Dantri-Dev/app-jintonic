@@ -18,11 +18,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
+import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.ScreenScaffold
+import androidx.wear.compose.material3.Text
 import com.jintonic.app.core.states.ResultState
 import com.jintonic.app.data.HealthView
 import com.jintonic.app.ui.components.InfoRow
-import com.jintonic.app.ui.components.TopLabel
 import com.jintonic.app.ui.health.HealthViewModel
 import com.jintonic.app.ui.theme.FfdColors
 import com.jintonic.app.ui.theme.color
@@ -30,7 +31,7 @@ import com.jintonic.app.ui.theme.label
 import com.jintonic.app.vitals.AlertLevel
 import com.jintonic.app.vitals.Apparatus
 
-// Where each apparatus sits on the figure, as fractions of the canvas (x, y).
+// Position of each apparatus on the figure, as fractions of the canvas (x, y).
 private val ANCHORS = mapOf(
     Apparatus.PSYCHOLOGICAL to Offset(0.5f, 0.11f),
     Apparatus.CARDIOVASCULAR to Offset(0.56f, 0.32f),
@@ -49,7 +50,7 @@ private fun Apparatus.label(): String = when (this) {
     Apparatus.PSYCHOLOGICAL -> "Psicologico"
 }
 
-// Worst level among the readings of each apparatus; null = no data.
+// Worst level among each apparatus' readings; null = no data.
 private fun HealthView.levels(): Map<Apparatus, AlertLevel> =
     assessment.readings.groupBy { it.parameter.apparatus }
         .mapValues { (_, readings) -> readings.maxOf { it.level } }
@@ -58,12 +59,14 @@ private fun HealthView.levels(): Map<Apparatus, AlertLevel> =
 fun BodyScreen(vm: HealthViewModel) {
     val state by vm.state.collectAsStateWithLifecycle()
     val levels = (state as? ResultState.Success)?.data?.levels().orEmpty()
-    val listState = rememberScalingLazyListState(initialCenterItemIndex = 0)
-    ScreenScaffold(scrollState = listState, timeText = { TopLabel("Corpo") }) {
-        ScalingLazyColumn(state = listState, modifier = Modifier.fillMaxWidth(), contentPadding = it) {
+    val listState = rememberScalingLazyListState()
+    ScreenScaffold(scrollState = listState) { contentPadding ->
+        ScalingLazyColumn(state = listState, modifier = Modifier.fillMaxWidth(), contentPadding = contentPadding) {
+            item { ListHeader { Text("Corpo") } }
             item { BodyFigure(levels) }
             Apparatus.entries.forEach { apparatus ->
-                item { ApparatusLine(apparatus, levels[apparatus]) }
+                val level = levels[apparatus]
+                item { InfoRow(apparatus.label(), level?.label() ?: "n.d.", level?.color() ?: FfdColors.TextSecondary) }
             }
         }
     }
@@ -73,9 +76,9 @@ fun BodyScreen(vm: HealthViewModel) {
 private fun BodyFigure(levels: Map<Apparatus, AlertLevel>) {
     val summary = levels.entries.joinToString { "${it.key.label()} ${it.value.label()}" }
     Canvas(modifier = Modifier.size(width = 90.dp, height = 140.dp).semantics { contentDescription = "Mappa del corpo: $summary" }) {
-        drawSilhouette(FfdColors.Surface.copy(alpha = 1f), FfdColors.LabelTop)
+        drawSilhouette(FfdColors.TextSecondary.copy(alpha = 0.25f), FfdColors.TextSecondary)
         ANCHORS.forEach { (apparatus, anchor) ->
-            val color = levels[apparatus]?.color() ?: FfdColors.LabelTop
+            val color = levels[apparatus]?.color() ?: FfdColors.TextSecondary
             val center = Offset(anchor.x * size.width, anchor.y * size.height)
             drawCircle(color.copy(alpha = 0.35f), radius = 9.dp.toPx(), center = center)
             drawCircle(color, radius = 5.dp.toPx(), center = center)
@@ -94,9 +97,4 @@ private fun DrawScope.drawSilhouette(fill: Color, outline: Color) {
     drawRoundRect(fill, topLeft = Offset(w * 0.32f, h * 0.58f), size = Size(w * 0.16f, h * 0.4f), cornerRadius = r)
     drawRoundRect(fill, topLeft = Offset(w * 0.52f, h * 0.58f), size = Size(w * 0.16f, h * 0.4f), cornerRadius = r)
     drawCircle(outline.copy(alpha = 0.4f), radius = w * 0.13f, center = Offset(w * 0.5f, h * 0.11f), style = Stroke(1.dp.toPx()))
-}
-
-@Composable
-private fun ApparatusLine(apparatus: Apparatus, level: AlertLevel?) {
-    InfoRow(apparatus.label(), level?.label() ?: "n.d.", level?.color() ?: FfdColors.LabelTop)
 }
