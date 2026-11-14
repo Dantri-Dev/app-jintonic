@@ -45,6 +45,8 @@ private val WAVE_AMPLITUDE = 4.dp
 @Composable
 fun ScoreArc(score: Int?, label: String, caption: String, color: Color, modifier: Modifier = Modifier) {
     val progress = ((score ?: 0) / SCORE_MAX).coerceIn(0f, 1f)
+    // A zero score is a danger state: fill the whole ring so it reads as one bright alert, not an empty track.
+    val fill = if (progress == 0f) 1f else progress
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.fillMaxSize().padding(2.dp)) {
             val stroke = FfdSizes.RingStroke.toPx()
@@ -52,7 +54,7 @@ fun ScoreArc(score: Int?, label: String, caption: String, color: Color, modifier
             val radius = size.minDimension / 2f - stroke / 2f - amp
             val center = Offset(size.width / 2f, size.height / 2f)
             drawTrack(center, radius, stroke, color.copy(alpha = TRACK_ALPHA))
-            if (progress > 0f) drawWave(center, radius, amp, stroke, color, progress)
+            drawWave(center, radius, amp, stroke, color, fill)
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(

@@ -27,6 +27,7 @@ object FfdColors {
     val AccentSoft = Color(ColorRoles.ACCENT_SOFT)
     val AccentStrong = Color(ColorRoles.ACCENT_STRONG)
     val TextSecondary = Color(ColorRoles.TEXT_SECONDARY)
+    val Error = Color(Palette.Semantic.ERROR)
 }
 
 // Shared dimensions that Material does not provide out of the box.
@@ -48,7 +49,7 @@ val GoogleSansFlex = FontFamily(
 fun Status.color(): Color = when (this) {
     Status.GREEN -> FfdColors.LevelHigh
     Status.YELLOW -> FfdColors.LevelMid
-    Status.RED -> FfdColors.LevelLow
+    Status.RED -> FfdColors.Error
 }
 
 fun AlertLevel.color(): Color = when (this) {
