@@ -1,0 +1,3 @@
+# app-jintonic
+
+Progetto hackathon.
