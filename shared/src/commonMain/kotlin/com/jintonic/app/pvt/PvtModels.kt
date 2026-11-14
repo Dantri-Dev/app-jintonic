@@ -1,7 +1,7 @@
 package com.jintonic.app.pvt
 
 // Test length presets (PLAN.md 5.1).
-enum class PvtMode(val durationSec: Int) { TRIAGE(30), DEMO(90), STANDARD(180) }
+enum class PvtMode(val durationSec: Int) { TRIAGE(30), DEMO(10), STANDARD(180) }
 
 // One stimulus/response pair. Times are on a monotonic clock.
 data class PvtTrial(

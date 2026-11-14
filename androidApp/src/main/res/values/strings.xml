@@ -15,7 +15,7 @@
     <string name="nav_params">Parametri</string>
     <string name="nav_emergency">Emergenza</string>
     <string name="title_readiness">Readiness</string>
-    <string name="title_cognitive">Cognitivo</string>
+    <string name="title_cognitive">Salute</string>
 
     <!-- Onboarding -->
     <string name="onboarding_subtitle">Misura lucidità e parametri vitali per dirti se sei in grado di lavorare.</string>
@@ -46,7 +46,7 @@
 
     <!-- History -->
     <string name="history_empty">Nessuna sessione. Fai il primo test dalla Home.</string>
-    <string name="history_cognitive">Cognitivo %1$d</string>
+    <string name="history_cognitive">Salute %1$d</string>
     <string name="history_readiness">Readiness %1$d</string>
     <string name="history_escalation">Escalation</string>
     <string name="history_pending">In coda per la Terra</string>

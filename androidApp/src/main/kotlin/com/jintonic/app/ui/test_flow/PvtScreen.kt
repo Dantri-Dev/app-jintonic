@@ -8,6 +8,8 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -83,15 +85,11 @@ fun PvtScreen(vm: TestFlowViewModel, onFinished: () -> Unit) {
             modifier = Modifier
                 .fillMaxSize()
                 .pointerInput(Unit) {
-                    awaitPointerEventScope {
-                        while (true) {
-                            val event = awaitPointerEvent()
-                            val down = event.changes.firstOrNull { it.pressed && !it.previousPressed }
-                            if (down != null) {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                taps.trySend(down.uptimeMillis)
-                            }
-                        }
+                    awaitEachGesture {
+                        val down = awaitFirstDown(requireUnconsumed = false)
+                        // Only a tap on a visible ball buzzes; taps in the empty wait stay silent.
+                        if (stimulusVisible) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        taps.trySend(down.uptimeMillis)
                     }
                 },
             contentAlignment = Alignment.Center,
@@ -110,6 +108,8 @@ fun PvtScreen(vm: TestFlowViewModel, onFinished: () -> Unit) {
 // Solid ball that pulses slowly to draw the eye, with a tap glyph telling you to touch it.
 @Composable
 private fun Stimulus() {
+    val haptic = LocalHapticFeedback.current
+    LaunchedEffect(Unit) { haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
     val transition = rememberInfiniteTransition(label = "pulse")
     val scale by transition.animateFloat(
         initialValue = PULSE_MIN,

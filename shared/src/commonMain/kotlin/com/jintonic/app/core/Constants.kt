@@ -9,7 +9,7 @@ object Constants {
     const val FALSE_START_MIN_RT_MS = 100L
     const val TIMEOUT_MS = 3_000L
     const val STIMULUS_MIN_DELAY_MS = 1_000L
-    const val STIMULUS_MAX_DELAY_MS = 4_000L
+    const val STIMULUS_MAX_DELAY_MS = 2_500L
 
     // --- Cognitive score ---
     const val BASELINE_SESSIONS = 3
