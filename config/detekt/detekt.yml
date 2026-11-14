@@ -1,6 +1,13 @@
 # Detekt configuration. Merged on top of the bundled defaults
 # (buildUponDefaultConfig = true), so only overrides live here.
 
+style:
+  MagicNumber:
+    # This is a threshold/weights engine: numeric literals are the domain.
+    active: false
+  MaxLineLength:
+    maxLineLength: 140
+
 naming:
   FunctionNaming:
     # @Composable functions are PascalCase by convention.
