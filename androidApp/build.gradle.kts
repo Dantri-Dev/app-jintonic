@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -28,6 +29,13 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.health.services.client)
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
+    implementation(libs.kotlinx.serialization.json)
 
     // Tooling / previews
     implementation(libs.wear.tooling.preview)
@@ -69,5 +77,6 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }

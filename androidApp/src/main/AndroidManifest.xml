@@ -5,7 +5,21 @@
         android:name="android.hardware.type.watch"
         android:required="true" />
 
+    <!-- Heart rate: granular health permission on Wear OS 6+, BODY_SENSORS before. -->
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+    <uses-permission
+        android:name="android.permission.BODY_SENSORS"
+        android:maxSdkVersion="35" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <queries>
+        <package android:name="com.google.android.wearable.healthservices" />
+    </queries>
+
     <application
+        android:name=".JintonicApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"

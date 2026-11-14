@@ -1,0 +1,108 @@
+package com.jintonic.app.ui.test_flow
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.jintonic.app.assessment.CognitiveAssessment
+import com.jintonic.app.assessment.FitForDutyEngine
+import com.jintonic.app.core.AppConstants
+import com.jintonic.app.core.LOG
+import com.jintonic.app.core.states.ResultState
+import com.jintonic.app.data.HealthEvaluation
+import com.jintonic.app.data.PvtSnapshot
+import com.jintonic.app.data.SessionRecord
+import com.jintonic.app.data.SessionStore
+import com.jintonic.app.data.sensors.VitalsMonitor
+import com.jintonic.app.pvt.PreTestAnswers
+import com.jintonic.app.pvt.PvtMode
+import com.jintonic.app.pvt.PvtResult
+import com.jintonic.app.pvt.PvtTrial
+import com.jintonic.app.pvt.Status
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.util.UUID
+
+data class PreTestForm(
+    val sleepHours: Float = AppConstants.SLEEP_DEFAULT_HOURS,
+    val mood: Int = AppConstants.MOOD_DEFAULT,
+)
+
+data class TestOutcome(val cognitive: CognitiveAssessment, val result: PvtResult)
+
+// One ViewModel for the whole flow: Pre-test -> PVT -> Result.
+class TestFlowViewModel(
+    private val store: SessionStore,
+    private val vitals: VitalsMonitor,
+    private val engineFactory: () -> FitForDutyEngine,
+) : ViewModel() {
+
+    private val _form = MutableStateFlow(PreTestForm())
+    val form: StateFlow<PreTestForm> = _form.asStateFlow()
+
+    private val _state = MutableStateFlow<ResultState<TestOutcome>>(ResultState.Idle)
+    val state: StateFlow<ResultState<TestOutcome>> = _state.asStateFlow()
+
+    var mode: PvtMode = PvtMode.DEMO
+        private set
+    private var engine: FitForDutyEngine = engineFactory()
+
+    fun begin(mode: PvtMode) {
+        this.mode = mode
+        engine = engineFactory()
+        _state.value = ResultState.Idle
+    }
+
+    fun setSleep(hours: Float) = _form.update { it.copy(sleepHours = hours) }
+
+    fun setMood(mood: Int) = _form.update { it.copy(mood = mood) }
+
+    fun nextStimulusDelayMs(): Long = engine.nextStimulusDelayMs()
+
+    fun finish(trials: List<PvtTrial>) {
+        _state.value = ResultState.Loading
+        viewModelScope.launch {
+            runCatching { assessAndSave(trials) }
+                .onSuccess { _state.value = ResultState.Success(it) }
+                .onFailure {
+                    LOG.e("Session evaluation failed", it)
+                    _state.value = ResultState.Failure("Impossibile salvare la sessione.")
+                }
+        }
+    }
+
+    private suspend fun assessAndSave(trials: List<PvtTrial>): TestOutcome {
+        val form = _form.value
+        val past = store.sessions.first()
+        val result = engine.evaluate(trials)
+        val cognitive = engine.assessCognitive(
+            result = result,
+            answers = PreTestAnswers(form.sleepHours, form.mood),
+            history = past.map { it.pvt.toResult() },
+        )
+        val snapshot = vitals.state.value
+        val health = HealthEvaluation.evaluate(engine, snapshot, store.manual.first(), past.lastOrNull()).assessment
+        store.append(
+            SessionRecord(
+                id = UUID.randomUUID().toString(),
+                timestampMs = System.currentTimeMillis(),
+                mode = mode.name,
+                pvt = PvtSnapshot.from(result),
+                sleepHours = form.sleepHours,
+                mood = form.mood,
+                cognitiveScore = cognitive.score,
+                status = cognitive.status.name,
+                escalated = cognitive.escalateToSurgeon,
+                readinessScore = health.readinessScore,
+                overallLevel = health.overallLevel.name,
+                hrBpm = snapshot.hrBpm,
+                spo2Pct = snapshot.spo2Pct,
+                // Outbox: red results and escalations wait for the next link to Earth.
+                pendingSync = cognitive.status == Status.RED || cognitive.escalateToSurgeon,
+            ),
+        )
+        return TestOutcome(cognitive, result)
+    }
+}
