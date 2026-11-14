@@ -63,7 +63,7 @@ private fun HomeHero(ui: HomeUi?, onStartTest: () -> Unit) {
             Text(
                 text = if (streak > 0) "🔥 $streak ${if (streak == 1) "giorno" else "giorni"}" else "Primo test di oggi",
                 fontSize = FfdType.Streak,
-                color = FfdColors.Yellow,
+                color = FfdColors.AccentSoft,
             )
         }
     }
@@ -79,7 +79,7 @@ private fun HomeMenu(ui: HomeUi?, onNavigate: (String) -> Unit) {
         MenuButton("Storico") { onNavigate(Routes.HISTORY) }
         MenuButton("Corpo") { onNavigate(Routes.BODY) }
         MenuButton("Parametri") { onNavigate(Routes.PARAMS) }
-        MenuButton("Emergenza", accent = FfdColors.Red) { onNavigate(Routes.EMERGENCY) }
+        MenuButton("Emergenza", accent = FfdColors.AccentStrong) { onNavigate(Routes.EMERGENCY) }
         val pending = ui?.pendingSync ?: 0
         if (pending > 0) BodyText("$pending in coda per la Terra")
     }

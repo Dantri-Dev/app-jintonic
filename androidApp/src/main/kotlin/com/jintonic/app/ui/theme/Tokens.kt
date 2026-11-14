@@ -4,25 +4,44 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.wear.compose.material3.ColorScheme
 import androidx.wear.compose.material3.MaterialTheme
+import androidx.wear.compose.material3.Typography
+import com.jintonic.app.R
+import com.jintonic.app.design.ColorRoles
+import com.jintonic.app.design.Palette
 import com.jintonic.app.pvt.Status
 import com.jintonic.app.vitals.AlertLevel
 import com.jintonic.app.vitals.HealthParameter
 
-// Design tokens taken verbatim from docs/flussi_ui.html (CSS source, not eyeballed).
+// Colour roles come from shared (com.jintonic.app.design), the single source for Wear OS and watchOS.
 object FfdColors {
-    val Background = Color(0xFF000000)
-    val OnBackground = Color(0xFFFFFFFF)
-    val Green = Color(0xFF39D98A)
-    val Yellow = Color(0xFFF2C14E)
-    val Red = Color(0xFFFF6B5E)
-    val TextSecondary = Color(0xFFC2C9D0) // .s, .ring .l
-    val LabelTop = Color(0xFF7A8692) // .top
-    val LabelBottom = Color(0xFF9AA4AE) // .bot
-    val PillContainer = Color(0xFFFFFFFF) // .btn
-    val PillContent = Color(0xFF000000)
-    val Surface = Color(0xFF1A1C1E)
+    val Background = Color(ColorRoles.BACKGROUND)
+    val OnBackground = Color(ColorRoles.ON_BACKGROUND)
+    val LevelHigh = Color(ColorRoles.LEVEL_HIGH)
+    val LevelMid = Color(ColorRoles.LEVEL_MID)
+    val LevelLow = Color(ColorRoles.LEVEL_LOW)
+    val Primary = Color(ColorRoles.PRIMARY)
+    val AccentSoft = Color(ColorRoles.ACCENT_SOFT)
+    val AccentStrong = Color(ColorRoles.ACCENT_STRONG)
+    val TextSecondary = Color(ColorRoles.TEXT_SECONDARY)
+    val LabelTop = Color(ColorRoles.LABEL)
+    val LabelBottom = Color(ColorRoles.TEXT_SECONDARY)
+    val PillContainer = Color(ColorRoles.PILL_CONTAINER)
+    val PillContent = Color(ColorRoles.PILL_CONTENT)
+    val Surface = Color(ColorRoles.SURFACE)
 }
+
+// Google Sans Flex (OFL), static weights from shared/design/res/font.
+val GoogleSansFlex = FontFamily(
+    Font(R.font.google_sans_flex_regular, FontWeight.Normal),
+    Font(R.font.google_sans_flex_medium, FontWeight.Medium),
+    Font(R.font.google_sans_flex_semibold, FontWeight.SemiBold),
+    Font(R.font.google_sans_flex_bold, FontWeight.Bold),
+)
 
 object FfdSizes {
     // CSS says 100px, but on the round 192dp face it collides with the top label: 92dp (deliberate delta).
@@ -50,15 +69,15 @@ object FfdType {
 }
 
 fun Status.color(): Color = when (this) {
-    Status.GREEN -> FfdColors.Green
-    Status.YELLOW -> FfdColors.Yellow
-    Status.RED -> FfdColors.Red
+    Status.GREEN -> FfdColors.LevelHigh
+    Status.YELLOW -> FfdColors.LevelMid
+    Status.RED -> FfdColors.LevelLow
 }
 
 fun AlertLevel.color(): Color = when (this) {
-    AlertLevel.NOMINAL -> FfdColors.Green
-    AlertLevel.WARNING -> FfdColors.Yellow
-    AlertLevel.CRITICAL -> FfdColors.Red
+    AlertLevel.NOMINAL -> FfdColors.LevelHigh
+    AlertLevel.WARNING -> FfdColors.LevelMid
+    AlertLevel.CRITICAL -> FfdColors.LevelLow
 }
 
 fun AlertLevel.label(): String = when (this) {
@@ -78,7 +97,41 @@ fun HealthParameter.label(): String = when (this) {
     HealthParameter.MOOD -> "Umore"
 }
 
+// Wear Material scheme rebuilt on the shared palette, so default components (cards, tonal buttons, switches) match.
+private val FfdColorScheme = ColorScheme(
+    primary = Color(ColorRoles.PRIMARY),
+    primaryDim = Color(Palette.Blue.B600),
+    primaryContainer = Color(Palette.Blue.B800),
+    onPrimary = Color(ColorRoles.ON_PRIMARY),
+    onPrimaryContainer = Color(Palette.Blue.B100),
+    secondary = Color(ColorRoles.SECONDARY),
+    secondaryDim = Color(Palette.Orange.O600),
+    secondaryContainer = Color(Palette.Orange.O900),
+    onSecondary = Color(ColorRoles.ON_SECONDARY),
+    onSecondaryContainer = Color(Palette.Orange.O100),
+    tertiary = Color(Palette.Blue.B300),
+    tertiaryDim = Color(Palette.Blue.B500),
+    tertiaryContainer = Color(Palette.Blue.B900),
+    onTertiary = Color(Palette.Neutral.N800),
+    onTertiaryContainer = Color(Palette.Blue.B100),
+    surfaceContainerLow = Color(Palette.Neutral.N800),
+    surfaceContainer = Color(Palette.Neutral.N800),
+    surfaceContainerHigh = Color(Palette.Neutral.N700),
+    onSurface = Color(Palette.Neutral.N0),
+    onSurfaceVariant = Color(Palette.Neutral.N300),
+    outline = Color(Palette.Neutral.N500),
+    outlineVariant = Color(Palette.Neutral.N600),
+    background = Color(ColorRoles.BACKGROUND),
+    onBackground = Color(ColorRoles.ON_BACKGROUND),
+    error = Color(Palette.Semantic.ERROR),
+    onError = Color(Palette.Neutral.N0),
+)
+
 @Composable
 fun FfdTheme(content: @Composable () -> Unit) {
-    MaterialTheme(content = content)
+    MaterialTheme(
+        colorScheme = FfdColorScheme,
+        typography = Typography(defaultFontFamily = GoogleSansFlex),
+        content = content,
+    )
 }

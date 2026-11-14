@@ -73,7 +73,7 @@ private fun ScalingLazyListScope.triageItems(view: HealthView) {
     item {
         Text(
             text = if (a.triage) "TRIAGE ATTIVO" else "Parametri: ${a.overallLevel.label()}",
-            color = if (a.triage) FfdColors.Red else a.overallLevel.color(),
+            color = if (a.triage) FfdColors.AccentStrong else a.overallLevel.color(),
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
@@ -82,7 +82,7 @@ private fun ScalingLazyListScope.triageItems(view: HealthView) {
     item { BodyText(timeToCriticalText(view.minutesToCritical)) }
     item { BodyText("HR ${view.snapshot.hrBpm ?: "--"} bpm · SpO2 ${view.snapshot.spo2Pct}%") }
     a.readings.filter { it.level == AlertLevel.CRITICAL }.forEach { reading ->
-        item { BodyText("Critico: ${reading.parameter.label()}", color = FfdColors.Red) }
+        item { BodyText("Critico: ${reading.parameter.label()}", color = FfdColors.AccentStrong) }
     }
 }
 
@@ -98,12 +98,12 @@ private fun BreathingItem(phase: BreathPhase, guide: BreathingGuide, vm: Emergen
     val duration = (if (phase == BreathPhase.INHALE) guide.inhaleSec else guide.exhaleSec) * MS_PER_SEC
     val scale by animateFloatAsState(target, tween(duration), label = "breath")
     if (phase == BreathPhase.IDLE) {
-        MenuButton("Respirazione guidata", accent = FfdColors.Green) { vm.startBreathing(guide) }
+        MenuButton("Respirazione guidata", accent = FfdColors.Primary) { vm.startBreathing(guide) }
         return
     }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.size(110.dp)) {
-            Box(Modifier.size(100.dp).scale(scale).border(6.dp, FfdColors.Green, CircleShape))
+            Box(Modifier.size(100.dp).scale(scale).border(6.dp, FfdColors.Primary, CircleShape))
             Text(if (phase == BreathPhase.INHALE) "Inspira" else "Espira", fontWeight = FontWeight.SemiBold)
         }
         MenuButton("Stop") { vm.stopBreathing() }

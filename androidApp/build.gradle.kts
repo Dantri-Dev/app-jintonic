@@ -75,6 +75,8 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    // Fonts shared with watchOS live in the shared module (single copy).
+    sourceSets["main"].res.directories += "../shared/design/res"
     buildFeatures {
         compose = true
         buildConfig = true

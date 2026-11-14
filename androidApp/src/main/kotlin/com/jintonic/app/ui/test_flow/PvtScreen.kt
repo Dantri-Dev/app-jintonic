@@ -103,15 +103,15 @@ private fun Stimulus() {
                 val halo = core + FfdSizes.StimulusGlow.toPx()
                 drawCircle(
                     brush = Brush.radialGradient(
-                        0f to FfdColors.Green.copy(alpha = GLOW_ALPHA),
-                        core / halo to FfdColors.Green.copy(alpha = GLOW_ALPHA),
+                        0f to FfdColors.Primary.copy(alpha = GLOW_ALPHA),
+                        core / halo to FfdColors.Primary.copy(alpha = GLOW_ALPHA),
                         1f to Color.Transparent,
                         radius = halo,
                     ),
                     radius = halo,
                 )
             }
-            .background(FfdColors.Green, CircleShape),
+            .background(FfdColors.Primary, CircleShape),
     )
 }
 

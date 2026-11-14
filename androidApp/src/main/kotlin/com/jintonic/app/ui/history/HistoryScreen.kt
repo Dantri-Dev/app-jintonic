@@ -66,8 +66,8 @@ private fun SessionCard(session: SessionRecord) {
                 val time = Instant.ofEpochMilli(session.timestampMs).atZone(ZoneId.systemDefault()).format(DATE_FORMAT)
                 Text(time, fontSize = FfdType.Body, color = FfdColors.TextSecondary)
                 session.readinessScore?.let { Text("Readiness $it", fontSize = FfdType.Body, color = FfdColors.TextSecondary) }
-                if (session.escalated) Text("Escalation", fontSize = FfdType.Body, color = FfdColors.Red)
-                if (session.pendingSync) Text("In coda per la Terra", fontSize = FfdType.Body, color = FfdColors.Yellow)
+                if (session.escalated) Text("Escalation", fontSize = FfdType.Body, color = FfdColors.AccentStrong)
+                if (session.pendingSync) Text("In coda per la Terra", fontSize = FfdType.Body, color = FfdColors.AccentSoft)
             }
         }
     }

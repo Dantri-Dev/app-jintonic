@@ -49,7 +49,7 @@ fun ResultScreen(vm: TestFlowViewModel, onDone: () -> Unit, onRetry: () -> Unit,
                 ResultHero(s.data.cognitive)
                 ResultDetails(s.data.cognitive, onDone, onRetry, onHistory)
             }
-            is ResultState.Failure -> CenteredBox { BodyText(s.message, color = FfdColors.Red) }
+            is ResultState.Failure -> CenteredBox { BodyText(s.message, color = FfdColors.AccentStrong) }
             else -> CenteredBox { CircularProgressIndicator() }
         }
     }
@@ -81,9 +81,9 @@ private fun ResultDetails(
         verticalArrangement = Arrangement.spacedBy(6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (cognitive.escalateToSurgeon) BodyText("«Contatta il flight surgeon»", color = FfdColors.Red)
-        if (cognitive.perceivedMismatch) BodyText("«Ti senti bene, ma i riflessi dicono il contrario»", color = FfdColors.Yellow)
-        if (cognitive.sleepWarning) BodyText("Sonno insufficiente", color = FfdColors.Yellow)
+        if (cognitive.escalateToSurgeon) BodyText("«Contatta il flight surgeon»", color = FfdColors.AccentStrong)
+        if (cognitive.perceivedMismatch) BodyText("«Ti senti bene, ma i riflessi dicono il contrario»", color = FfdColors.AccentSoft)
+        if (cognitive.sleepWarning) BodyText("Sonno insufficiente", color = FfdColors.AccentSoft)
         cognitive.advice.forEach { BodyText(AdviceMessages.text(it)) }
         MenuButton("Fatto", onClick = onDone)
         MenuButton("Rifai", onClick = onRetry)
