@@ -35,7 +35,7 @@ object Reminders {
 
     fun createChannel(context: Context) {
         val channel = NotificationChannel(
-            AppConstants.REMINDER_CHANNEL_ID, "Promemoria test", NotificationManager.IMPORTANCE_HIGH,
+            AppConstants.REMINDER_CHANNEL_ID, context.getString(R.string.reminder_channel), NotificationManager.IMPORTANCE_HIGH,
         )
         context.getSystemService(NotificationManager::class.java)?.createNotificationChannel(channel)
     }
@@ -65,8 +65,8 @@ object Reminders {
         )
         val notification = NotificationCompat.Builder(context, AppConstants.REMINDER_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("Fit-for-Duty")
-            .setContentText("È ora del test di reattività.")
+            .setContentTitle(context.getString(R.string.app_name))
+            .setContentText(context.getString(R.string.reminder_text))
             .setContentIntent(intent)
             .setAutoCancel(true)
             .build()

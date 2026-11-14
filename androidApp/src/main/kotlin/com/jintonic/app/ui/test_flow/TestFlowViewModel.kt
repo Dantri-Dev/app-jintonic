@@ -1,7 +1,9 @@
 package com.jintonic.app.ui.test_flow
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.jintonic.app.R
 import com.jintonic.app.assessment.CognitiveAssessment
 import com.jintonic.app.assessment.FitForDutyEngine
 import com.jintonic.app.core.AppConstants
@@ -37,6 +39,7 @@ class TestFlowViewModel(
     private val store: SessionStore,
     private val vitals: VitalsMonitor,
     private val engineFactory: () -> FitForDutyEngine,
+    private val context: Context,
 ) : ViewModel() {
 
     private val _form = MutableStateFlow(PreTestForm())
@@ -68,7 +71,7 @@ class TestFlowViewModel(
                 .onSuccess { _state.value = ResultState.Success(it) }
                 .onFailure {
                     LOG.e("Session evaluation failed", it)
-                    _state.value = ResultState.Failure("Impossibile salvare la sessione.")
+                    _state.value = ResultState.Failure(context.getString(R.string.session_save_failed))
                 }
         }
     }

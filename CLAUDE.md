@@ -25,6 +25,9 @@ These are the intended conventions as code grows — the project is currently a 
   ViewModel per screen, or one per flow whose pages share it). The Apple side talks to `shared` only
   through a single DI entry point (`PlatformModule`): one operation per use-case operation,
   `async throws` on networked ones, `StateFlow` properties for observable state.
+- **Strings (Android)**: every user-facing string lives in `res/values/strings.xml`; no hardcoded
+  display text in Kotlin. Enum-to-label mappings return `@StringRes` ids, resolved with
+  `stringResource` in composables or `context.getString` elsewhere.
 - **Empty states (Android)**: every empty state shows a Material Icons **Outlined** icon above its
   text (the `EmptyState` component). Outlined family only — no filled icons.
 - **Tappables (Android)**: every tappable (buttons, edge buttons, steppers, selectable items) goes

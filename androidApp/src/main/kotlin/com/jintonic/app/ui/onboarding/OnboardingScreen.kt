@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
@@ -17,6 +18,7 @@ import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import com.jintonic.app.ui.components.AppEdgeButton
+import com.jintonic.app.R
 import com.jintonic.app.ui.components.Hint
 import com.jintonic.app.ui.theme.FfdColors
 
@@ -38,7 +40,7 @@ fun OnboardingScreen(
         scrollState = listState,
         edgeButton = {
             AppEdgeButton(onClick = { launcher.launch(arrayOf(heartRatePermission, Manifest.permission.POST_NOTIFICATIONS)) }) {
-                Text("Consenti")
+                Text(stringResource(R.string.action_allow))
             }
         },
     ) { contentPadding ->
@@ -50,7 +52,7 @@ fun OnboardingScreen(
         ) {
             item {
                 Text(
-                    text = "jintonic",
+                    text = stringResource(R.string.app_name),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = FfdColors.Primary,
@@ -58,8 +60,8 @@ fun OnboardingScreen(
                     modifier = Modifier.padding(bottom = 2.dp),
                 )
             }
-            item { Hint("Misura lucidità e parametri vitali per dirti se sei in grado di lavorare.") }
-            item { Hint("Serve l'accesso alla frequenza cardiaca. Se neghi, viene simulata.", color = FfdColors.AccentSoft) }
+            item { Hint(stringResource(R.string.onboarding_subtitle)) }
+            item { Hint(stringResource(R.string.onboarding_permission), color = FfdColors.AccentSoft) }
         }
     }
 }

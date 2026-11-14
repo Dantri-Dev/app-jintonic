@@ -38,8 +38,8 @@ private const val TRACK_ALPHA = 0.2f
 private const val GAP_DEG = 72f
 private const val TRACK_START_DEG = 90f + GAP_DEG / 2f
 private const val TRACK_SWEEP_DEG = 360f - GAP_DEG
-private const val WAVELENGTH_DEG = 24f
-private val WAVE_AMPLITUDE = 5.dp
+private const val WAVELENGTH_DEG = 14f
+private val WAVE_AMPLITUDE = 4.dp
 
 // Full-screen score ring that follows the bezel as an expressive wave, score centred. Screen hero.
 @Composable
@@ -83,7 +83,7 @@ private fun DrawScope.drawTrack(center: Offset, radius: Float, stroke: Float, co
 
 private fun DrawScope.drawWave(center: Offset, radius: Float, amp: Float, stroke: Float, color: Color, progress: Float) {
     val sweep = TRACK_SWEEP_DEG * progress
-    val steps = (sweep / 2f).toInt().coerceAtLeast(2)
+    val steps = sweep.toInt().coerceAtLeast(2)
     val path = Path()
     for (i in 0..steps) {
         val deg = TRACK_START_DEG + sweep * (i / steps.toFloat())

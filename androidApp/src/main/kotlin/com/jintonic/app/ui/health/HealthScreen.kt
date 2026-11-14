@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -22,6 +23,7 @@ import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SwitchButton
 import androidx.wear.compose.material3.Text
+import com.jintonic.app.R
 import com.jintonic.app.core.states.ResultState
 import com.jintonic.app.data.HealthView
 import com.jintonic.app.data.ManualEntry
@@ -33,7 +35,7 @@ import com.jintonic.app.ui.components.InfoRow
 import com.jintonic.app.ui.components.hapticToggle
 import com.jintonic.app.ui.theme.FfdColors
 import com.jintonic.app.ui.theme.color
-import com.jintonic.app.ui.theme.label
+import com.jintonic.app.ui.theme.labelRes
 import com.jintonic.app.vitals.AlertLevel
 import com.jintonic.app.vitals.HealthParameter
 
@@ -44,9 +46,9 @@ fun HealthScreen(vm: HealthViewModel) {
     val listState = rememberScalingLazyListState()
     ScreenScaffold(scrollState = listState) { contentPadding ->
         ScalingLazyColumn(state = listState, modifier = Modifier.fillMaxWidth(), contentPadding = contentPadding) {
-            item { ListHeader { Text("Parametri") } }
+            item { ListHeader { Text(stringResource(R.string.nav_params)) } }
             if (view == null) {
-                item { Hint("Lettura in corso…") }
+                item { Hint(stringResource(R.string.loading)) }
             } else {
                 vitalsItems(view, vm)
                 manualItems(view, vm)
@@ -61,47 +63,64 @@ private fun HealthView.levelOf(parameter: HealthParameter): AlertLevel? =
 private fun ScalingLazyListScope.vitalsItems(view: HealthView, vm: HealthViewModel) {
     item {
         val score = view.assessment.readinessScore
-        InfoRow("Readiness", "$score", CognitiveScoring.status(score).color())
+        InfoRow(stringResource(R.string.title_readiness), "$score", CognitiveScoring.status(score).color())
     }
-    item { InfoRow("Livello complessivo", view.assessment.overallLevel.label(), view.assessment.overallLevel.color()) }
+    item {
+        InfoRow(
+            stringResource(R.string.overall_level),
+            stringResource(view.assessment.overallLevel.labelRes()),
+            view.assessment.overallLevel.color(),
+        )
+    }
     item {
         val source = when (view.snapshot.hrSource) {
-            HrSource.SENSOR -> "HR"
-            HrSource.SIMULATED -> "HR (simulata)"
-            HrSource.SIMULATED_OFF_BODY -> "HR (simulata · non al polso)"
+            HrSource.SENSOR -> stringResource(R.string.hr)
+            HrSource.SIMULATED -> stringResource(R.string.hr_simulated)
+            HrSource.SIMULATED_OFF_BODY -> stringResource(R.string.hr_simulated_off)
         }
-        InfoRow(source, view.snapshot.hrBpm?.let { "$it bpm" } ?: "--", view.levelOf(HealthParameter.HR)?.color() ?: FfdColors.OnBackground)
+        val value = view.snapshot.hrBpm?.let { stringResource(R.string.hr_value, it) } ?: stringResource(R.string.value_dash)
+        InfoRow(source, value, view.levelOf(HealthParameter.HR)?.color() ?: FfdColors.OnBackground)
     }
-    item { InfoRow("SpO2 (nominale)", "${view.snapshot.spo2Pct}%", view.levelOf(HealthParameter.SPO2)?.color() ?: FfdColors.OnBackground) }
+    item {
+        InfoRow(
+            stringResource(R.string.spo2_nominal),
+            stringResource(R.string.percent, view.snapshot.spo2Pct),
+            view.levelOf(HealthParameter.SPO2)?.color() ?: FfdColors.OnBackground,
+        )
+    }
     item {
         SwitchButton(
             checked = view.snapshot.crashActive,
             onCheckedChange = hapticToggle(vm::setSpo2Crash),
             modifier = Modifier.fillMaxWidth(),
-        ) { Text("Simula calo SpO2") }
+        ) { Text(stringResource(R.string.sim_spo2_drop)) }
     }
 }
 
 private fun ScalingLazyListScope.manualItems(view: HealthView, vm: HealthViewModel) {
     val m = view.manual
-    item { ListHeader { Text("Inserimento manuale") } }
+    item { ListHeader { Text(stringResource(R.string.manual_entry)) } }
     item {
-        StepperLine("Glicemia", m.glucoseMgDl?.let { "$it mg/dL" }, view.levelOf(HealthParameter.GLUCOSE)) { delta ->
+        val value = m.glucoseMgDl?.let { stringResource(R.string.glucose_value, it) }
+        StepperLine(stringResource(R.string.param_glucose), value, view.levelOf(HealthParameter.GLUCOSE)) { delta ->
             vm.updateManual { it.copy(glucoseMgDl = ((it.glucoseMgDl ?: GLUCOSE_DEFAULT) + delta * GLUCOSE_STEP).coerceIn(0, GLUCOSE_MAX)) }
         }
     }
     item {
-        StepperLine("Stress", m.stress?.let { "$it / 5" }, view.levelOf(HealthParameter.STRESS)) { delta ->
+        val value = m.stress?.let { stringResource(R.string.stress_value, it) }
+        StepperLine(stringResource(R.string.param_stress), value, view.levelOf(HealthParameter.STRESS)) { delta ->
             vm.updateManual { it.copy(stress = ((it.stress ?: SCALE_DEFAULT) + delta).coerceIn(1, SCALE_MAX)) }
         }
     }
     item {
-        StepperLine("Radiazioni", m.radiationMsvPerDay?.let { "$it mSv/g" }, view.levelOf(HealthParameter.RADIATION)) { delta ->
+        val value = m.radiationMsvPerDay?.let { stringResource(R.string.radiation_value, it.toString()) }
+        StepperLine(stringResource(R.string.param_radiation), value, view.levelOf(HealthParameter.RADIATION)) { delta ->
             vm.updateManual { it.copy(radiationMsvPerDay = stepRadiation(it, delta)) }
         }
     }
     item {
-        StepperLine("Esercizio", m.exerciseMinPerDay?.let { "$it min/g" }, view.levelOf(HealthParameter.EXERCISE)) { delta ->
+        val value = m.exerciseMinPerDay?.let { stringResource(R.string.exercise_value, it) }
+        StepperLine(stringResource(R.string.param_exercise), value, view.levelOf(HealthParameter.EXERCISE)) { delta ->
             vm.updateManual {
                 it.copy(exerciseMinPerDay = ((it.exerciseMinPerDay ?: EXERCISE_DEFAULT) + delta * EXERCISE_STEP).coerceIn(0, EXERCISE_MAX))
             }
@@ -116,22 +135,24 @@ private fun stepRadiation(entry: ManualEntry, delta: Int): Double {
 
 @Composable
 private fun StepperLine(label: String, value: String?, level: AlertLevel?, onStep: (Int) -> Unit) {
+    val decDesc = stringResource(R.string.stepper_decrease, label)
+    val incDesc = stringResource(R.string.stepper_increase, label)
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, style = MaterialTheme.typography.bodySmall, color = FfdColors.TextSecondary)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             AppIconButton(
                 onClick = { onStep(-1) },
-                modifier = Modifier.size(32.dp).semantics { contentDescription = "Diminuisci $label" },
+                modifier = Modifier.size(32.dp).semantics { contentDescription = decDesc },
             ) { Text("−") }
             Text(
-                value ?: "non inserito",
+                value ?: stringResource(R.string.value_not_set),
                 style = MaterialTheme.typography.titleMedium,
                 color = level?.color() ?: FfdColors.OnBackground,
                 fontWeight = FontWeight.SemiBold,
             )
             AppIconButton(
                 onClick = { onStep(1) },
-                modifier = Modifier.size(32.dp).semantics { contentDescription = "Aumenta $label" },
+                modifier = Modifier.size(32.dp).semantics { contentDescription = incDesc },
             ) { Text("+") }
         }
     }

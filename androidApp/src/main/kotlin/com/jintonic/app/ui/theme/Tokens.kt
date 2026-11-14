@@ -1,5 +1,6 @@
 package com.jintonic.app.ui.theme
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
@@ -14,7 +15,6 @@ import com.jintonic.app.design.ColorRoles
 import com.jintonic.app.design.Palette
 import com.jintonic.app.pvt.Status
 import com.jintonic.app.vitals.AlertLevel
-import com.jintonic.app.vitals.HealthParameter
 
 // Colour roles come from shared (com.jintonic.app.design), the single source for Wear OS and watchOS.
 object FfdColors {
@@ -57,21 +57,11 @@ fun AlertLevel.color(): Color = when (this) {
     AlertLevel.CRITICAL -> FfdColors.LevelLow
 }
 
-fun AlertLevel.label(): String = when (this) {
-    AlertLevel.NOMINAL -> "Nominale"
-    AlertLevel.WARNING -> "Attenzione"
-    AlertLevel.CRITICAL -> "Critico"
-}
-
-fun HealthParameter.label(): String = when (this) {
-    HealthParameter.HR -> "Frequenza cardiaca"
-    HealthParameter.SPO2 -> "SpO2"
-    HealthParameter.EXERCISE -> "Esercizio"
-    HealthParameter.GLUCOSE -> "Glicemia"
-    HealthParameter.STRESS -> "Stress"
-    HealthParameter.RADIATION -> "Radiazioni"
-    HealthParameter.SLEEP -> "Sonno"
-    HealthParameter.MOOD -> "Umore"
+@StringRes
+fun AlertLevel.labelRes(): Int = when (this) {
+    AlertLevel.NOMINAL -> R.string.level_nominal
+    AlertLevel.WARNING -> R.string.level_warning
+    AlertLevel.CRITICAL -> R.string.level_critical
 }
 
 // Wear Material scheme rebuilt on the shared palette, so default components (cards, buttons, switches) match.

@@ -30,7 +30,7 @@ val appModule = module {
     factory<FitForDutyEngine> { DefaultFitForDutyEngine(seed = System.currentTimeMillis()) }
 
     viewModel { HomeViewModel(store = get(), vitals = get(), engineFactory = { get() }) }
-    viewModel { TestFlowViewModel(store = get(), vitals = get(), engineFactory = { get() }) }
+    viewModel { TestFlowViewModel(store = get(), vitals = get(), engineFactory = { get() }, context = androidContext()) }
     viewModel { HealthViewModel(store = get(), vitals = get(), engineFactory = { get() }) }
     viewModel { EmergencyViewModel(haptics = get()) }
     viewModel { HistoryViewModel(store = get()) }

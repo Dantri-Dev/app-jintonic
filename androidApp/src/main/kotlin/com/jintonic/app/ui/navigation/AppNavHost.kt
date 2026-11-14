@@ -35,7 +35,7 @@ fun AppNavHost(
         nav.navigate(if (withPreTest) Routes.PRE_TEST else Routes.PVT)
     }
 
-    AppScaffold {
+    AppScaffold(timeText = {}) {
         SwipeDismissableNavHost(
             navController = nav,
             startDestination = if (hasPermission) Routes.HOME else Routes.ONBOARDING,
@@ -62,12 +62,7 @@ fun AppNavHost(
                 })
             }
             composable(Routes.RESULT) {
-                ResultScreen(
-                    vm = testVm,
-                    onDone = { nav.popBackStack(Routes.HOME, inclusive = false) },
-                    onRetry = { startTest(testVm.mode, withPreTest = false) },
-                    onHistory = { nav.navigate(Routes.HISTORY) },
-                )
+                ResultScreen(vm = testVm, onDone = { nav.popBackStack(Routes.HOME, inclusive = false) })
             }
             composable(Routes.HISTORY) { HistoryScreen() }
             composable(Routes.PARAMS) { HealthScreen(healthVm) }

@@ -11,7 +11,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -22,12 +24,13 @@ import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import com.jintonic.app.core.states.ResultState
+import com.jintonic.app.R
 import com.jintonic.app.data.HealthView
 import com.jintonic.app.ui.components.InfoRow
 import com.jintonic.app.ui.health.HealthViewModel
 import com.jintonic.app.ui.theme.FfdColors
 import com.jintonic.app.ui.theme.color
-import com.jintonic.app.ui.theme.label
+import com.jintonic.app.ui.theme.labelRes
 import com.jintonic.app.vitals.AlertLevel
 import com.jintonic.app.vitals.Apparatus
 
@@ -41,13 +44,14 @@ private val ANCHORS = mapOf(
     Apparatus.MUSCULOSKELETAL to Offset(0.44f, 0.78f),
 )
 
-private fun Apparatus.label(): String = when (this) {
-    Apparatus.CARDIOVASCULAR -> "Cardiovascolare"
-    Apparatus.RESPIRATORY -> "Respiratorio"
-    Apparatus.METABOLIC -> "Metabolico"
-    Apparatus.RADIATION -> "Radiazioni"
-    Apparatus.MUSCULOSKELETAL -> "Muscoloscheletrico"
-    Apparatus.PSYCHOLOGICAL -> "Psicologico"
+@StringRes
+private fun Apparatus.labelRes(): Int = when (this) {
+    Apparatus.CARDIOVASCULAR -> R.string.apparatus_cardiovascular
+    Apparatus.RESPIRATORY -> R.string.apparatus_respiratory
+    Apparatus.METABOLIC -> R.string.apparatus_metabolic
+    Apparatus.RADIATION -> R.string.param_radiation
+    Apparatus.MUSCULOSKELETAL -> R.string.apparatus_musculoskeletal
+    Apparatus.PSYCHOLOGICAL -> R.string.apparatus_psychological
 }
 
 // Worst level among each apparatus' readings; null = no data.
@@ -62,11 +66,17 @@ fun BodyScreen(vm: HealthViewModel) {
     val listState = rememberScalingLazyListState()
     ScreenScaffold(scrollState = listState) { contentPadding ->
         ScalingLazyColumn(state = listState, modifier = Modifier.fillMaxWidth(), contentPadding = contentPadding) {
-            item { ListHeader { Text("Corpo") } }
+            item { ListHeader { Text(stringResource(R.string.nav_body)) } }
             item { BodyFigure(levels) }
             Apparatus.entries.forEach { apparatus ->
                 val level = levels[apparatus]
-                item { InfoRow(apparatus.label(), level?.label() ?: "n.d.", level?.color() ?: FfdColors.TextSecondary) }
+                item {
+                    InfoRow(
+                        stringResource(apparatus.labelRes()),
+                        level?.let { stringResource(it.labelRes()) } ?: stringResource(R.string.body_na),
+                        level?.color() ?: FfdColors.TextSecondary,
+                    )
+                }
             }
         }
     }
@@ -74,8 +84,22 @@ fun BodyScreen(vm: HealthViewModel) {
 
 @Composable
 private fun BodyFigure(levels: Map<Apparatus, AlertLevel>) {
-    val summary = levels.entries.joinToString { "${it.key.label()} ${it.value.label()}" }
-    Canvas(modifier = Modifier.size(width = 90.dp, height = 140.dp).semantics { contentDescription = "Mappa del corpo: $summary" }) {
+    val apparatusNames = mapOf(
+        Apparatus.CARDIOVASCULAR to stringResource(R.string.apparatus_cardiovascular),
+        Apparatus.RESPIRATORY to stringResource(R.string.apparatus_respiratory),
+        Apparatus.METABOLIC to stringResource(R.string.apparatus_metabolic),
+        Apparatus.RADIATION to stringResource(R.string.param_radiation),
+        Apparatus.MUSCULOSKELETAL to stringResource(R.string.apparatus_musculoskeletal),
+        Apparatus.PSYCHOLOGICAL to stringResource(R.string.apparatus_psychological),
+    )
+    val levelNames = mapOf(
+        AlertLevel.NOMINAL to stringResource(R.string.level_nominal),
+        AlertLevel.WARNING to stringResource(R.string.level_warning),
+        AlertLevel.CRITICAL to stringResource(R.string.level_critical),
+    )
+    val summary = levels.entries.joinToString { "${apparatusNames[it.key]} ${levelNames[it.value]}" }
+    val desc = stringResource(R.string.body_map_desc, summary)
+    Canvas(modifier = Modifier.size(width = 90.dp, height = 140.dp).semantics { contentDescription = desc }) {
         drawSilhouette(FfdColors.TextSecondary.copy(alpha = 0.25f), FfdColors.TextSecondary)
         ANCHORS.forEach { (apparatus, anchor) ->
             val color = levels[apparatus]?.color() ?: FfdColors.TextSecondary

@@ -1,3 +1,109 @@
 <resources>
     <string name="app_name">jintonic</string>
+
+    <!-- Actions -->
+    <string name="action_do_test">Fai il test</string>
+    <string name="action_confirm">Conferma</string>
+    <string name="action_allow">Consenti</string>
+    <string name="action_done">Fatto</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_quick_test">Test rapido 30 s</string>
+
+    <!-- Navigation / titles -->
+    <string name="nav_history">Storico</string>
+    <string name="nav_body">Corpo</string>
+    <string name="nav_params">Parametri</string>
+    <string name="nav_emergency">Emergenza</string>
+    <string name="title_readiness">Readiness</string>
+    <string name="title_cognitive">Cognitivo</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_subtitle">Misura lucidità e parametri vitali per dirti se sei in grado di lavorare.</string>
+    <string name="onboarding_permission">Serve l\'accesso alla frequenza cardiaca. Se neghi, viene simulata.</string>
+
+    <!-- Home -->
+    <plurals name="streak_days">
+        <item quantity="one">🔥 %d giorno</item>
+        <item quantity="other">🔥 %d giorni</item>
+    </plurals>
+    <string name="pending_sync">%d in coda per la Terra</string>
+
+    <!-- Pre-test -->
+    <string name="pretest_title">Sonno e umore</string>
+    <string name="sleep_hours">%1$.1f h</string>
+    <string name="sleep_less">Meno sonno</string>
+    <string name="sleep_more">Più sonno</string>
+    <string name="mood_desc">Umore %1$d su 5</string>
+
+    <!-- Result -->
+    <string name="headline_green">Sei pronto. Buon lavoro.</string>
+    <string name="headline_yellow">Fai una pausa di 10 minuti.</string>
+    <string name="headline_red">Evita compiti critici. Riposa.</string>
+    <string name="alert_surgeon">Contatta il flight surgeon</string>
+    <string name="alert_mismatch">Ti senti bene, ma i riflessi dicono il contrario</string>
+    <string name="alert_sleep">Sonno insufficiente</string>
+    <string name="session_save_failed">Impossibile salvare la sessione.</string>
+
+    <!-- History -->
+    <string name="history_empty">Nessuna sessione. Fai il primo test dalla Home.</string>
+    <string name="history_cognitive">Cognitivo %1$d</string>
+    <string name="history_readiness">Readiness %1$d</string>
+    <string name="history_escalation">Escalation</string>
+    <string name="history_pending">In coda per la Terra</string>
+
+    <!-- Parameters -->
+    <string name="loading">Lettura in corso…</string>
+    <string name="overall_level">Livello complessivo</string>
+    <string name="hr">HR</string>
+    <string name="hr_simulated">HR (simulata)</string>
+    <string name="hr_simulated_off">HR (simulata · non al polso)</string>
+    <string name="value_dash">--</string>
+    <string name="hr_value">%1$d bpm</string>
+    <string name="spo2_nominal">SpO2 (nominale)</string>
+    <string name="percent">%1$d%%</string>
+    <string name="sim_spo2_drop">Simula calo SpO2</string>
+    <string name="manual_entry">Inserimento manuale</string>
+    <string name="value_not_set">non inserito</string>
+    <string name="stepper_decrease">Diminuisci %1$s</string>
+    <string name="stepper_increase">Aumenta %1$s</string>
+    <string name="glucose_value">%1$d mg/dL</string>
+    <string name="stress_value">%1$d / 5</string>
+    <string name="radiation_value">%1$s mSv/g</string>
+    <string name="exercise_value">%1$d min/g</string>
+
+    <!-- Body -->
+    <string name="body_na">n.d.</string>
+    <string name="body_map_desc">Mappa del corpo: %1$s</string>
+    <string name="apparatus_cardiovascular">Cardiovascolare</string>
+    <string name="apparatus_respiratory">Respiratorio</string>
+    <string name="apparatus_metabolic">Metabolico</string>
+    <string name="apparatus_musculoskeletal">Muscoloscheletrico</string>
+    <string name="apparatus_psychological">Psicologico</string>
+
+    <!-- Emergency -->
+    <string name="triage_active">Triage attivo</string>
+    <string name="params_level">Parametri: %1$s</string>
+    <string name="vitals_line">HR %1$s bpm · SpO2 %2$d%%</string>
+    <string name="breathing_guided">Respirazione guidata</string>
+    <string name="breathe_in">Inspira</string>
+    <string name="breathe_out">Espira</string>
+
+    <!-- Alert levels -->
+    <string name="level_nominal">Nominale</string>
+    <string name="level_warning">Attenzione</string>
+    <string name="level_critical">Critico</string>
+
+    <!-- Health parameters -->
+    <string name="param_hr">Frequenza cardiaca</string>
+    <string name="param_spo2">SpO2</string>
+    <string name="param_exercise">Esercizio</string>
+    <string name="param_glucose">Glicemia</string>
+    <string name="param_stress">Stress</string>
+    <string name="param_radiation">Radiazioni</string>
+    <string name="param_sleep">Sonno</string>
+    <string name="param_mood">Umore</string>
+
+    <!-- Reminders -->
+    <string name="reminder_channel">Promemoria test</string>
+    <string name="reminder_text">È ora del test di reattività.</string>
 </resources>

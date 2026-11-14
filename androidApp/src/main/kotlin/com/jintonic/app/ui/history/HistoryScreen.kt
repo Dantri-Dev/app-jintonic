@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -27,6 +28,7 @@ import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import com.jintonic.app.core.states.ResultState
 import com.jintonic.app.data.SessionRecord
+import com.jintonic.app.R
 import com.jintonic.app.pvt.Status
 import com.jintonic.app.ui.components.EmptyState
 import com.jintonic.app.ui.theme.FfdColors
@@ -45,9 +47,9 @@ fun HistoryScreen(vm: HistoryViewModel = koinViewModel()) {
     val listState = rememberScalingLazyListState()
     ScreenScaffold(scrollState = listState) { contentPadding ->
         ScalingLazyColumn(state = listState, modifier = Modifier.fillMaxWidth(), contentPadding = contentPadding) {
-            item { ListHeader { Text("Storico") } }
+            item { ListHeader { Text(stringResource(R.string.nav_history)) } }
             if (sessions.isEmpty()) {
-                item { EmptyState(Icons.Outlined.History, "Nessuna sessione. Fai il primo test dalla Home.") }
+                item { EmptyState(Icons.Outlined.History, stringResource(R.string.history_empty)) }
             }
             items(sessions) { SessionCard(it) }
         }
@@ -62,20 +64,21 @@ private fun SessionCard(session: SessionRecord) {
             Box(Modifier.size(10.dp).background(status.color(), CircleShape))
             Column {
                 Text(
-                    text = "Cognitivo ${session.cognitiveScore}",
+                    text = stringResource(R.string.history_cognitive, session.cognitiveScore),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                 )
                 val time = Instant.ofEpochMilli(session.timestampMs).atZone(ZoneId.systemDefault()).format(DATE_FORMAT)
                 Text(time, style = MaterialTheme.typography.bodySmall, color = FfdColors.TextSecondary)
+                val secondary = MaterialTheme.typography.bodySmall
                 session.readinessScore?.let {
-                    Text("Readiness $it", style = MaterialTheme.typography.bodySmall, color = FfdColors.TextSecondary)
+                    Text(stringResource(R.string.history_readiness, it), style = secondary, color = FfdColors.TextSecondary)
                 }
                 if (session.escalated) {
-                    Text("Escalation", style = MaterialTheme.typography.bodySmall, color = FfdColors.AccentStrong)
+                    Text(stringResource(R.string.history_escalation), style = secondary, color = FfdColors.AccentStrong)
                 }
                 if (session.pendingSync) {
-                    Text("In coda per la Terra", style = MaterialTheme.typography.bodySmall, color = FfdColors.AccentSoft)
+                    Text(stringResource(R.string.history_pending), style = secondary, color = FfdColors.AccentSoft)
                 }
             }
         }
