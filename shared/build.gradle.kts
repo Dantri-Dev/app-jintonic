@@ -3,14 +3,14 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidMultiplatformLibrary)
+    alias(libs.plugins.detekt)
 }
 
 kotlin {
-    // Apple Watch targets (device + simulators)
+    // Apple Watch targets (device + Apple Silicon simulator)
     listOf(
         watchosArm64(),
-        watchosSimulatorArm64(),
-        watchosX64()
+        watchosSimulatorArm64()
     ).forEach { watchTarget ->
         watchTarget.binaries.framework {
             baseName = "Shared"
@@ -35,4 +35,9 @@ kotlin {
             implementation(libs.kotlin.test)
         }
     }
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.files("config/detekt/detekt.yml"))
 }

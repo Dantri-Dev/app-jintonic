@@ -1,0 +1,8 @@
+# Detekt configuration. Merged on top of the bundled defaults
+# (buildUponDefaultConfig = true), so only overrides live here.
+
+naming:
+  FunctionNaming:
+    # @Composable functions are PascalCase by convention.
+    ignoreAnnotated:
+      - Composable
