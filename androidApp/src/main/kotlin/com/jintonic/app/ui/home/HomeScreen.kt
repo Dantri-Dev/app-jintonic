@@ -6,15 +6,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.wear.compose.material3.CircularProgressIndicator
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import com.jintonic.app.core.states.ResultState
@@ -57,13 +60,19 @@ private fun HomeHero(ui: HomeUi?, onStartTest: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(FfdSizes.ScreenGap),
         ) {
-            ScoreRing(score = ui?.readiness, caption = "Readiness", ringColor = ui?.status?.color() ?: FfdColors.LabelTop)
+            if (ui == null) {
+                // Loading the local store: spinner in the ring's footprint, streak line kept invisible (no layout jump).
+                CircularProgressIndicator(modifier = Modifier.size(FfdSizes.RingDiameter))
+            } else {
+                ScoreRing(score = ui.readiness, caption = "Readiness", ringColor = ui.status.color())
+            }
             PillButton(text = "Fai il test", onClick = onStartTest)
             val streak = ui?.streakDays ?: 0
             Text(
                 text = if (streak > 0) "🔥 $streak ${if (streak == 1) "giorno" else "giorni"}" else "Primo test di oggi",
                 fontSize = FfdType.Streak,
                 color = FfdColors.AccentSoft,
+                modifier = Modifier.alpha(if (ui == null) 0f else 1f),
             )
         }
     }
