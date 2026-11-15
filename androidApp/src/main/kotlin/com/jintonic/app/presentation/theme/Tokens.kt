@@ -19,6 +19,7 @@ object AppColors {
     val Primary = Color(0xFFFFFFFF)
     val Tertiary = Color(0xFF0088FF)
     val Error = Color(0xFFFF3B30)
+    val Warning = Color(0xFFFFCC00)
     val TrackDim = Color(0xFF3A3A3C)
 }
 

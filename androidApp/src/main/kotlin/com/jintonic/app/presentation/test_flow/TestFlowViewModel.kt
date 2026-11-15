@@ -19,6 +19,7 @@ import com.jintonic.app.pvt.PvtMode
 import com.jintonic.app.pvt.PvtResult
 import com.jintonic.app.pvt.PvtTrial
 import com.jintonic.app.pvt.Status
+import com.jintonic.app.pvt.TestStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +27,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-data class TestOutcome(val cognitive: CognitiveAssessment, val result: PvtResult)
+data class TestOutcome(
+    val cognitive: CognitiveAssessment,
+    val result: PvtResult,
+    val testStatus: TestStatus,
+)
 
 // One ViewModel for the whole flow: optional pre-flight -> PVT -> result.
 class TestFlowViewModel(
@@ -102,6 +107,6 @@ class TestFlowViewModel(
                 pendingSync = cognitive.status == Status.RED || cognitive.escalateToSurgeon,
             ),
         )
-        return TestOutcome(cognitive, result)
+        return TestOutcome(cognitive, result, engine.testStatus(trials))
     }
 }

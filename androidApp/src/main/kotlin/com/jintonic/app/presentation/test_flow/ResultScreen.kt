@@ -1,7 +1,9 @@
 package com.jintonic.app.presentation.test_flow
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
@@ -13,12 +15,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.PriorityHigh
 import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material3.CircularProgressIndicator
+import androidx.wear.compose.material3.ConfirmationDialog
 import androidx.wear.compose.material3.ConfirmationDialogDefaults
 import androidx.wear.compose.material3.FailureConfirmationDialog
 import androidx.wear.compose.material3.Icon
@@ -29,12 +36,16 @@ import com.jintonic.app.assessment.CognitiveAssessment
 import com.jintonic.app.core.compose.WearPreview
 import com.jintonic.app.core.compose.WearScreenPreview
 import com.jintonic.app.core.states.ResultState
+import com.jintonic.app.presentation.components.DiamondShape
 import com.jintonic.app.presentation.theme.AppColors
 import com.jintonic.app.pvt.PvtResult
 import com.jintonic.app.pvt.Status
+import com.jintonic.app.pvt.TestStatus
 
 private const val SUCCESS_CLOSE_MS = 220
 private const val SUCCESS_CLOSE_SCALE = 0.8f
+private const val WARNING_DIAMOND_DP = 80
+private const val WARNING_ICON_DP = 36
 
 @Composable
 fun ResultScreen(vm: TestFlowViewModel, onDone: () -> Unit) {
@@ -42,18 +53,15 @@ fun ResultScreen(vm: TestFlowViewModel, onDone: () -> Unit) {
     ResultContent(state = state, onDone = onDone)
 }
 
-// Native confirmation: a reassuring white success, or a red at-risk failure.
+// Native confirmation, by test completeness: a reassuring white success when every stimulus was
+// answered, a yellow warning when some were missed, or a red failure when none were.
 @Composable
 private fun ResultContent(state: ResultState<TestOutcome>, onDone: () -> Unit) {
     when (state) {
-        is ResultState.Success -> {
-            val cognitive = state.data.cognitive
-            val atRisk = cognitive.status == Status.RED || cognitive.escalateToSurgeon
-            if (atRisk) {
-                FailureResult(text = stringResource(R.string.result_at_risk), onDone = onDone)
-            } else {
-                SuccessResult(text = stringResource(R.string.result_ok), onDone = onDone)
-            }
+        is ResultState.Success -> when (state.data.testStatus) {
+            TestStatus.SUCCESS -> SuccessResult(text = stringResource(R.string.result_ok), onDone = onDone)
+            TestStatus.WARNING -> WarningResult(text = stringResource(R.string.result_warning), onDone = onDone)
+            TestStatus.ERROR -> FailureResult(text = stringResource(R.string.result_at_risk), onDone = onDone)
         }
 
         is ResultState.Failure -> FailureResult(text = state.message, onDone = onDone)
@@ -110,30 +118,67 @@ private fun FailureResult(text: String, onDone: () -> Unit) {
     }
 }
 
+// Partial run: a yellow diamond holding a warning mark, over the native confirmation scaffold.
+@Composable
+private fun WarningResult(text: String, onDone: () -> Unit) {
+    val style = ConfirmationDialogDefaults.curvedTextStyle
+    ConfirmationDialog(
+        visible = true,
+        onDismissRequest = onDone,
+        curvedText = { confirmationDialogCurvedText(text, style) },
+        // Transparent container hides the native hero shape; the diamond below is the whole mark.
+        colors = ConfirmationDialogDefaults.colors(
+            iconColor = AppColors.Background,
+            iconContainerColor = Color.Transparent,
+            textColor = AppColors.OnBackground,
+        ),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(WARNING_DIAMOND_DP.dp)
+                .clip(DiamondShape())
+                .background(AppColors.Warning),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.PriorityHigh,
+                contentDescription = null,
+                tint = AppColors.Background,
+                modifier = Modifier.size(WARNING_ICON_DP.dp),
+            )
+        }
+    }
+}
+
 private val PREVIEW_PVT = PvtResult(medianRtMs = 280.0, meanSpeed = 3.6, lapses = 1, falseStarts = 0, validTrials = 20)
 
-private fun previewOutcome(status: Status, escalate: Boolean = false) = TestOutcome(
+private fun previewOutcome(testStatus: TestStatus) = TestOutcome(
     cognitive = CognitiveAssessment(
-        score = if (status == Status.RED) 38 else 86,
-        status = status,
+        score = if (testStatus == TestStatus.ERROR) 38 else 86,
+        status = if (testStatus == TestStatus.ERROR) Status.RED else Status.GREEN,
         perceivedMismatch = false,
         sleepWarning = false,
         advice = emptyList(),
-        escalateToSurgeon = escalate,
+        escalateToSurgeon = false,
     ),
     result = PREVIEW_PVT,
+    testStatus = testStatus,
 )
 
 @WearPreview
 @Composable
 private fun ResultSuccessPreview() {
-    WearScreenPreview { ResultContent(state = ResultState.Success(previewOutcome(Status.GREEN)), onDone = {}) }
+    WearScreenPreview { ResultContent(state = ResultState.Success(previewOutcome(TestStatus.SUCCESS)), onDone = {}) }
+}
+
+@WearPreview
+@Composable
+private fun ResultWarningPreview() {
+    WearScreenPreview { ResultContent(state = ResultState.Success(previewOutcome(TestStatus.WARNING)), onDone = {}) }
 }
 
 @WearPreview
 @Composable
 private fun ResultFailurePreview() {
-    WearScreenPreview {
-        ResultContent(state = ResultState.Success(previewOutcome(Status.RED, escalate = true)), onDone = {})
-    }
+    WearScreenPreview { ResultContent(state = ResultState.Success(previewOutcome(TestStatus.ERROR)), onDone = {}) }
 }

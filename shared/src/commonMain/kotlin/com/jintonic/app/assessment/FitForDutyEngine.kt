@@ -7,6 +7,7 @@ import com.jintonic.app.pvt.PvtMetrics
 import com.jintonic.app.pvt.PvtResult
 import com.jintonic.app.pvt.PvtTrial
 import com.jintonic.app.pvt.StimulusGenerator
+import com.jintonic.app.pvt.TestStatus
 import com.jintonic.app.scoring.CognitiveScoring
 import com.jintonic.app.scoring.ReadinessScoring
 import com.jintonic.app.vitals.BreathingGuide
@@ -19,6 +20,7 @@ import com.jintonic.app.vitals.Vitals
 interface FitForDutyEngine {
     fun nextStimulusDelayMs(): Long
     fun evaluate(trials: List<PvtTrial>): PvtResult
+    fun testStatus(trials: List<PvtTrial>): TestStatus
     fun assessCognitive(result: PvtResult, answers: PreTestAnswers, history: List<PvtResult>): CognitiveAssessment
     fun assessHealth(vitals: Vitals, manual: ManualInputs): HealthAssessment
 }
@@ -31,6 +33,17 @@ class DefaultFitForDutyEngine(seed: Long) : FitForDutyEngine {
     override fun nextStimulusDelayMs(): Long = stimulus.nextDelayMs()
 
     override fun evaluate(trials: List<PvtTrial>): PvtResult = PvtMetrics.evaluate(trials)
+
+    // False starts are taps in the empty wait, not answers: only real stimuli count toward completeness.
+    override fun testStatus(trials: List<PvtTrial>): TestStatus {
+        val stimuli = trials.filter { !it.falseStart }
+        val answered = stimuli.count { it.responseAtMs != null }
+        return when {
+            answered == 0 -> TestStatus.ERROR
+            answered == stimuli.size -> TestStatus.SUCCESS
+            else -> TestStatus.WARNING
+        }
+    }
 
     override fun assessCognitive(
         result: PvtResult,

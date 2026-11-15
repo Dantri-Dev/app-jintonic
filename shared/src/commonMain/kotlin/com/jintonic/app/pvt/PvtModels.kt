@@ -24,3 +24,7 @@ data class PvtResult(
 )
 
 enum class Status { GREEN, YELLOW, RED }
+
+// Outcome of a test session by response completeness, independent of reaction-time scoring:
+// nothing tapped, some stimuli missed, or every stimulus answered.
+enum class TestStatus { ERROR, WARNING, SUCCESS }

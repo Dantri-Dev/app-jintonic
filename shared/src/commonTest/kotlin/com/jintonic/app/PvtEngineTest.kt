@@ -2,6 +2,7 @@ package com.jintonic.app
 
 import com.jintonic.app.advice.AdviceCode
 import com.jintonic.app.advice.AdviceRules
+import com.jintonic.app.assessment.DefaultFitForDutyEngine
 import com.jintonic.app.baseline.Baseline
 import com.jintonic.app.baseline.BaselineCalculator
 import com.jintonic.app.pvt.PreTestAnswers
@@ -10,6 +11,7 @@ import com.jintonic.app.pvt.PvtResult
 import com.jintonic.app.pvt.PvtTrial
 import com.jintonic.app.pvt.Status
 import com.jintonic.app.pvt.StimulusGenerator
+import com.jintonic.app.pvt.TestStatus
 import com.jintonic.app.scoring.CognitiveScoring
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -118,5 +120,30 @@ class PvtEngineTest {
             val delay = gen.nextDelayMs()
             assertTrue(delay in 1_000L..4_000L)
         }
+    }
+
+    @Test
+    fun testStatusErrorWhenNothingAnswered() {
+        val engine = DefaultFitForDutyEngine(seed = 1)
+        assertEquals(TestStatus.ERROR, engine.testStatus(listOf(timeout(), timeout())))
+    }
+
+    @Test
+    fun testStatusWarningWhenSomeMissed() {
+        val engine = DefaultFitForDutyEngine(seed = 1)
+        assertEquals(TestStatus.WARNING, engine.testStatus(listOf(responded(280), timeout())))
+    }
+
+    @Test
+    fun testStatusSuccessWhenAllAnswered() {
+        val engine = DefaultFitForDutyEngine(seed = 1)
+        assertEquals(TestStatus.SUCCESS, engine.testStatus(listOf(responded(280), responded(310))))
+    }
+
+    @Test
+    fun testStatusIgnoresFalseStarts() {
+        val engine = DefaultFitForDutyEngine(seed = 1)
+        val falseStart = PvtTrial(stimulusAtMs = 0, responseAtMs = 50, falseStart = true)
+        assertEquals(TestStatus.SUCCESS, engine.testStatus(listOf(falseStart, responded(280))))
     }
 }
