@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">jintonic</string>
+    <string name="app_name">AstroVitals</string>
 
     <!-- Home -->
     <string name="home_percent">%1$d %%</string>
