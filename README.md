@@ -31,4 +31,4 @@ It runs on the watch, and only on the watch: a Wear OS watch like the Pixel Watc
 
 ## Presentation
 
-Slides: [assets/presentation.pptx](./assets/presentation.pptx)
+Slides: [assets/presentazione.pptx](./assets/presentazione.pptx)
