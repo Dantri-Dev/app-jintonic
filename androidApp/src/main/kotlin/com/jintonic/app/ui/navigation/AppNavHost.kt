@@ -12,7 +12,6 @@ import com.jintonic.app.ui.health.HealthScreen
 import com.jintonic.app.ui.health.HealthViewModel
 import com.jintonic.app.ui.history.HistoryScreen
 import com.jintonic.app.ui.home.HomeScreen
-import com.jintonic.app.ui.onboarding.OnboardingScreen
 import com.jintonic.app.ui.test_flow.PreTestScreen
 import com.jintonic.app.ui.test_flow.PvtScreen
 import com.jintonic.app.ui.test_flow.ResultScreen
@@ -38,21 +37,14 @@ fun AppNavHost(
     AppScaffold(timeText = {}) {
         SwipeDismissableNavHost(
             navController = nav,
-            startDestination = if (hasPermission) Routes.HOME else Routes.ONBOARDING,
+            startDestination = Routes.HOME,
         ) {
-            composable(Routes.ONBOARDING) {
-                OnboardingScreen(
-                    heartRatePermission = heartRatePermission,
-                    onPermissionResult = onPermissionResult,
-                    onContinue = {
-                        nav.navigate(Routes.HOME) { popUpTo(Routes.ONBOARDING) { inclusive = true } }
-                    },
-                )
-            }
             composable(Routes.HOME) {
                 HomeScreen(
+                    heartRatePermission = heartRatePermission,
+                    hasPermission = hasPermission,
+                    onPermissionResult = onPermissionResult,
                     onStartTest = { startTest(PvtMode.DEMO, withPreTest = true) },
-                    onNavigate = { nav.navigate(it) },
                 )
             }
             composable(Routes.PRE_TEST) { PreTestScreen(testVm, onConfirm = { nav.navigate(Routes.PVT) }) }

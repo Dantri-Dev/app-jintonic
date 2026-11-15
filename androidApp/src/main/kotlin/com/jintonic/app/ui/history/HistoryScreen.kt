@@ -26,12 +26,15 @@ import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
+import com.jintonic.app.core.compose.PreviewData
+import com.jintonic.app.core.compose.WearPreview
+import com.jintonic.app.core.compose.WearScreenPreview
 import com.jintonic.app.core.states.ResultState
 import com.jintonic.app.data.SessionRecord
 import com.jintonic.app.R
 import com.jintonic.app.pvt.Status
 import com.jintonic.app.ui.components.EmptyState
-import com.jintonic.app.ui.theme.FfdColors
+import com.jintonic.app.ui.theme.AppColors
 import com.jintonic.app.ui.theme.color
 import org.koin.compose.viewmodel.koinViewModel
 import java.time.Instant
@@ -43,7 +46,11 @@ private val DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM HH:mm")
 @Composable
 fun HistoryScreen(vm: HistoryViewModel = koinViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val sessions = (state as? ResultState.Success)?.data.orEmpty()
+    HistoryContent(sessions = (state as? ResultState.Success)?.data.orEmpty())
+}
+
+@Composable
+private fun HistoryContent(sessions: List<SessionRecord>) {
     val listState = rememberScalingLazyListState()
     ScreenScaffold(scrollState = listState) { contentPadding ->
         ScalingLazyColumn(state = listState, modifier = Modifier.fillMaxWidth(), contentPadding = contentPadding) {
@@ -69,18 +76,30 @@ private fun SessionCard(session: SessionRecord) {
                     fontWeight = FontWeight.SemiBold,
                 )
                 val time = Instant.ofEpochMilli(session.timestampMs).atZone(ZoneId.systemDefault()).format(DATE_FORMAT)
-                Text(time, style = MaterialTheme.typography.bodySmall, color = FfdColors.TextSecondary)
+                Text(time, style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
                 val secondary = MaterialTheme.typography.bodySmall
                 session.readinessScore?.let {
-                    Text(stringResource(R.string.history_readiness, it), style = secondary, color = FfdColors.TextSecondary)
+                    Text(stringResource(R.string.history_readiness, it), style = secondary, color = AppColors.TextSecondary)
                 }
                 if (session.escalated) {
-                    Text(stringResource(R.string.history_escalation), style = secondary, color = FfdColors.AccentStrong)
+                    Text(stringResource(R.string.history_escalation), style = secondary, color = AppColors.AccentStrong)
                 }
                 if (session.pendingSync) {
-                    Text(stringResource(R.string.history_pending), style = secondary, color = FfdColors.AccentSoft)
+                    Text(stringResource(R.string.history_pending), style = secondary, color = AppColors.AccentSoft)
                 }
             }
         }
     }
+}
+
+@WearPreview
+@Composable
+private fun HistoryEmptyPreview() {
+    WearScreenPreview { HistoryContent(sessions = emptyList()) }
+}
+
+@WearPreview
+@Composable
+private fun HistoryFilledPreview() {
+    WearScreenPreview { HistoryContent(sessions = PreviewData.sessions()) }
 }

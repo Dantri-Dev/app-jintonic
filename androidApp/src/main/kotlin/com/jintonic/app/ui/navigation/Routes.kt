@@ -1,7 +1,6 @@
 package com.jintonic.app.ui.navigation
 
 object Routes {
-    const val ONBOARDING = "onboarding"
     const val HOME = "home"
     const val PRE_TEST = "pre_test"
     const val PVT = "pvt"

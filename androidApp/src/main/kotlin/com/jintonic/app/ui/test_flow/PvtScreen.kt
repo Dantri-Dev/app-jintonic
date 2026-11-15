@@ -39,9 +39,11 @@ import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import com.jintonic.app.core.Constants
+import com.jintonic.app.core.compose.WearPreview
+import com.jintonic.app.core.compose.WearScreenPreview
 import com.jintonic.app.pvt.PvtTrial
-import com.jintonic.app.ui.theme.FfdColors
-import com.jintonic.app.ui.theme.FfdSizes
+import com.jintonic.app.ui.theme.AppColors
+import com.jintonic.app.ui.theme.AppSizes
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
@@ -79,25 +81,29 @@ fun PvtScreen(vm: TestFlowViewModel, onFinished: () -> Unit) {
         onFinished()
     }
 
-    // timeText blanked so only the test countdown is shown, not the system clock.
+    val tapModifier = Modifier.pointerInput(Unit) {
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            // Only a tap on a visible ball buzzes; taps in the empty wait stay silent.
+            if (stimulusVisible) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            taps.trySend(down.uptimeMillis)
+        }
+    }
+    PvtContent(clockText = formatClock(remainingMs), stimulusVisible = stimulusVisible, tapModifier = tapModifier)
+}
+
+// timeText blanked so only the test countdown is shown, not the system clock.
+@Composable
+private fun PvtContent(clockText: String, stimulusVisible: Boolean, tapModifier: Modifier = Modifier) {
     ScreenScaffold(timeText = {}) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    awaitEachGesture {
-                        val down = awaitFirstDown(requireUnconsumed = false)
-                        // Only a tap on a visible ball buzzes; taps in the empty wait stay silent.
-                        if (stimulusVisible) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        taps.trySend(down.uptimeMillis)
-                    }
-                },
+            modifier = Modifier.fillMaxSize().then(tapModifier),
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = formatClock(remainingMs),
+                text = clockText,
                 style = MaterialTheme.typography.labelMedium,
-                color = FfdColors.TextSecondary,
+                color = AppColors.TextSecondary,
                 modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp),
             )
             if (stimulusVisible) Stimulus()
@@ -118,13 +124,13 @@ private fun Stimulus() {
         label = "pulse",
     )
     Box(
-        modifier = Modifier.size(FfdSizes.Stimulus).scale(scale).background(FfdColors.Primary, CircleShape),
+        modifier = Modifier.size(AppSizes.Stimulus).scale(scale).background(AppColors.Primary, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = Icons.Outlined.TouchApp,
             contentDescription = null,
-            tint = FfdColors.OnBackground,
+            tint = AppColors.OnBackground,
             modifier = Modifier.size(32.dp),
         )
     }
@@ -175,4 +181,16 @@ private suspend fun presentStimulus(taps: Channel<Long>, onStimulus: (Boolean) -
 private fun formatClock(ms: Long): String {
     val totalSec = (ms + MS_PER_SEC - 1) / MS_PER_SEC
     return "%d:%02d".format(totalSec / SEC_PER_MIN, totalSec % SEC_PER_MIN)
+}
+
+@WearPreview
+@Composable
+private fun PvtWaitingPreview() {
+    WearScreenPreview { PvtContent(clockText = "0:08", stimulusVisible = false) }
+}
+
+@WearPreview
+@Composable
+private fun PvtStimulusPreview() {
+    WearScreenPreview { PvtContent(clockText = "0:05", stimulusVisible = true) }
 }

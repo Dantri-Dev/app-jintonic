@@ -25,10 +25,12 @@ import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import com.jintonic.app.R
 import com.jintonic.app.core.AppConstants
+import com.jintonic.app.core.compose.WearPreview
+import com.jintonic.app.core.compose.WearScreenPreview
 import com.jintonic.app.ui.components.AppEdgeButton
 import com.jintonic.app.ui.components.AppIconButton
 import com.jintonic.app.ui.components.tappable
-import com.jintonic.app.ui.theme.FfdColors
+import com.jintonic.app.ui.theme.AppColors
 
 private val FACES = listOf("😣", "🙁", "😐", "🙂", "😄")
 private const val FACE_OFF_ALPHA = 0.3f
@@ -37,6 +39,16 @@ private const val FACE_OFF_ALPHA = 0.3f
 @Composable
 fun PreTestScreen(vm: TestFlowViewModel, onConfirm: () -> Unit) {
     val form by vm.form.collectAsStateWithLifecycle()
+    PreTestContent(form = form, onConfirm = onConfirm, onSleepChange = vm::setSleep, onMoodSelect = vm::setMood)
+}
+
+@Composable
+private fun PreTestContent(
+    form: PreTestForm,
+    onConfirm: () -> Unit,
+    onSleepChange: (Float) -> Unit,
+    onMoodSelect: (Int) -> Unit,
+) {
     val listState = rememberScalingLazyListState()
     ScreenScaffold(
         scrollState = listState,
@@ -53,12 +65,12 @@ fun PreTestScreen(vm: TestFlowViewModel, onConfirm: () -> Unit) {
                     stringResource(R.string.pretest_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = FfdColors.OnBackground,
+                    color = AppColors.OnBackground,
                     textAlign = TextAlign.Center,
                 )
             }
-            item { SleepRow(hours = form.sleepHours, onChange = vm::setSleep) }
-            item { FacesRow(selected = form.mood, onSelect = vm::setMood) }
+            item { SleepRow(hours = form.sleepHours, onChange = onSleepChange) }
+            item { FacesRow(selected = form.mood, onSelect = onMoodSelect) }
         }
     }
 }
@@ -76,7 +88,7 @@ private fun SleepRow(hours: Float, onChange: (Float) -> Unit) {
         Text(
             stringResource(R.string.sleep_hours, hours),
             style = MaterialTheme.typography.titleMedium,
-            color = FfdColors.OnBackground,
+            color = AppColors.OnBackground,
         )
         AppIconButton(
             onClick = { onChange((hours + step).coerceAtMost(AppConstants.SLEEP_MAX_HOURS)) },
@@ -101,5 +113,18 @@ private fun FacesRow(selected: Int, onSelect: (Int) -> Unit) {
                     .semantics { contentDescription = desc },
             )
         }
+    }
+}
+
+@WearPreview
+@Composable
+private fun PreTestContentPreview() {
+    WearScreenPreview {
+        PreTestContent(
+            form = PreTestForm(sleepHours = 7f, mood = 4),
+            onConfirm = {},
+            onSleepChange = {},
+            onMoodSelect = {},
+        )
     }
 }

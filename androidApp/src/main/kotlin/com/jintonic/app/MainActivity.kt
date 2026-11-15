@@ -9,7 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.core.content.ContextCompat
 import com.jintonic.app.data.sensors.VitalsMonitor
 import com.jintonic.app.ui.navigation.AppNavHost
-import com.jintonic.app.ui.theme.FfdTheme
+import com.jintonic.app.ui.theme.AppTheme
 import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
         val alreadyGranted = hasHeartRatePermission()
         if (alreadyGranted) vitals.start(sensorPermitted = true)
         setContent {
-            FfdTheme {
+            AppTheme {
                 AppNavHost(
                     heartRatePermission = heartRatePermission(),
                     hasPermission = alreadyGranted,

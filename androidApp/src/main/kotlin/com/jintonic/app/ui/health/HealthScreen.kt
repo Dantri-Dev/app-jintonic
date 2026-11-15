@@ -24,6 +24,9 @@ import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SwitchButton
 import androidx.wear.compose.material3.Text
 import com.jintonic.app.R
+import com.jintonic.app.core.compose.PreviewData
+import com.jintonic.app.core.compose.WearPreview
+import com.jintonic.app.core.compose.WearScreenPreview
 import com.jintonic.app.core.states.ResultState
 import com.jintonic.app.data.HealthView
 import com.jintonic.app.data.ManualEntry
@@ -33,7 +36,7 @@ import com.jintonic.app.ui.components.AppIconButton
 import com.jintonic.app.ui.components.Hint
 import com.jintonic.app.ui.components.InfoRow
 import com.jintonic.app.ui.components.hapticToggle
-import com.jintonic.app.ui.theme.FfdColors
+import com.jintonic.app.ui.theme.AppColors
 import com.jintonic.app.ui.theme.color
 import com.jintonic.app.ui.theme.labelRes
 import com.jintonic.app.vitals.AlertLevel
@@ -42,7 +45,19 @@ import com.jintonic.app.vitals.HealthParameter
 @Composable
 fun HealthScreen(vm: HealthViewModel) {
     val state by vm.state.collectAsStateWithLifecycle()
-    val view = (state as? ResultState.Success)?.data
+    HealthContent(
+        view = (state as? ResultState.Success)?.data,
+        onSpo2Crash = vm::setSpo2Crash,
+        onUpdateManual = vm::updateManual,
+    )
+}
+
+@Composable
+private fun HealthContent(
+    view: HealthView?,
+    onSpo2Crash: (Boolean) -> Unit,
+    onUpdateManual: ((ManualEntry) -> ManualEntry) -> Unit,
+) {
     val listState = rememberScalingLazyListState()
     ScreenScaffold(scrollState = listState) { contentPadding ->
         ScalingLazyColumn(state = listState, modifier = Modifier.fillMaxWidth(), contentPadding = contentPadding) {
@@ -50,8 +65,8 @@ fun HealthScreen(vm: HealthViewModel) {
             if (view == null) {
                 item { Hint(stringResource(R.string.loading)) }
             } else {
-                vitalsItems(view, vm)
-                manualItems(view, vm)
+                vitalsItems(view, onSpo2Crash)
+                manualItems(view, onUpdateManual)
             }
         }
     }
@@ -60,7 +75,7 @@ fun HealthScreen(vm: HealthViewModel) {
 private fun HealthView.levelOf(parameter: HealthParameter): AlertLevel? =
     assessment.readings.firstOrNull { it.parameter == parameter }?.level
 
-private fun ScalingLazyListScope.vitalsItems(view: HealthView, vm: HealthViewModel) {
+private fun ScalingLazyListScope.vitalsItems(view: HealthView, onSpo2Crash: (Boolean) -> Unit) {
     item {
         val score = view.assessment.readinessScore
         InfoRow(stringResource(R.string.title_readiness), "$score", CognitiveScoring.status(score).color())
@@ -79,49 +94,49 @@ private fun ScalingLazyListScope.vitalsItems(view: HealthView, vm: HealthViewMod
             HrSource.SIMULATED_OFF_BODY -> stringResource(R.string.hr_simulated_off)
         }
         val value = view.snapshot.hrBpm?.let { stringResource(R.string.hr_value, it) } ?: stringResource(R.string.value_dash)
-        InfoRow(source, value, view.levelOf(HealthParameter.HR)?.color() ?: FfdColors.OnBackground)
+        InfoRow(source, value, view.levelOf(HealthParameter.HR)?.color() ?: AppColors.OnBackground)
     }
     item {
         InfoRow(
             stringResource(R.string.spo2_nominal),
             stringResource(R.string.percent, view.snapshot.spo2Pct),
-            view.levelOf(HealthParameter.SPO2)?.color() ?: FfdColors.OnBackground,
+            view.levelOf(HealthParameter.SPO2)?.color() ?: AppColors.OnBackground,
         )
     }
     item {
         SwitchButton(
             checked = view.snapshot.crashActive,
-            onCheckedChange = hapticToggle(vm::setSpo2Crash),
+            onCheckedChange = hapticToggle(onSpo2Crash),
             modifier = Modifier.fillMaxWidth(),
         ) { Text(stringResource(R.string.sim_spo2_drop)) }
     }
 }
 
-private fun ScalingLazyListScope.manualItems(view: HealthView, vm: HealthViewModel) {
+private fun ScalingLazyListScope.manualItems(view: HealthView, onUpdateManual: ((ManualEntry) -> ManualEntry) -> Unit) {
     val m = view.manual
     item { ListHeader { Text(stringResource(R.string.manual_entry)) } }
     item {
         val value = m.glucoseMgDl?.let { stringResource(R.string.glucose_value, it) }
         StepperLine(stringResource(R.string.param_glucose), value, view.levelOf(HealthParameter.GLUCOSE)) { delta ->
-            vm.updateManual { it.copy(glucoseMgDl = ((it.glucoseMgDl ?: GLUCOSE_DEFAULT) + delta * GLUCOSE_STEP).coerceIn(0, GLUCOSE_MAX)) }
+            onUpdateManual { it.copy(glucoseMgDl = ((it.glucoseMgDl ?: GLUCOSE_DEFAULT) + delta * GLUCOSE_STEP).coerceIn(0, GLUCOSE_MAX)) }
         }
     }
     item {
         val value = m.stress?.let { stringResource(R.string.stress_value, it) }
         StepperLine(stringResource(R.string.param_stress), value, view.levelOf(HealthParameter.STRESS)) { delta ->
-            vm.updateManual { it.copy(stress = ((it.stress ?: SCALE_DEFAULT) + delta).coerceIn(1, SCALE_MAX)) }
+            onUpdateManual { it.copy(stress = ((it.stress ?: SCALE_DEFAULT) + delta).coerceIn(1, SCALE_MAX)) }
         }
     }
     item {
         val value = m.radiationMsvPerDay?.let { stringResource(R.string.radiation_value, it.toString()) }
         StepperLine(stringResource(R.string.param_radiation), value, view.levelOf(HealthParameter.RADIATION)) { delta ->
-            vm.updateManual { it.copy(radiationMsvPerDay = stepRadiation(it, delta)) }
+            onUpdateManual { it.copy(radiationMsvPerDay = stepRadiation(it, delta)) }
         }
     }
     item {
         val value = m.exerciseMinPerDay?.let { stringResource(R.string.exercise_value, it) }
         StepperLine(stringResource(R.string.param_exercise), value, view.levelOf(HealthParameter.EXERCISE)) { delta ->
-            vm.updateManual {
+            onUpdateManual {
                 it.copy(exerciseMinPerDay = ((it.exerciseMinPerDay ?: EXERCISE_DEFAULT) + delta * EXERCISE_STEP).coerceIn(0, EXERCISE_MAX))
             }
         }
@@ -138,7 +153,7 @@ private fun StepperLine(label: String, value: String?, level: AlertLevel?, onSte
     val decDesc = stringResource(R.string.stepper_decrease, label)
     val incDesc = stringResource(R.string.stepper_increase, label)
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(label, style = MaterialTheme.typography.bodySmall, color = FfdColors.TextSecondary)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = AppColors.TextSecondary)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             AppIconButton(
                 onClick = { onStep(-1) },
@@ -147,7 +162,7 @@ private fun StepperLine(label: String, value: String?, level: AlertLevel?, onSte
             Text(
                 value ?: stringResource(R.string.value_not_set),
                 style = MaterialTheme.typography.titleMedium,
-                color = level?.color() ?: FfdColors.OnBackground,
+                color = level?.color() ?: AppColors.OnBackground,
                 fontWeight = FontWeight.SemiBold,
             )
             AppIconButton(
@@ -169,3 +184,15 @@ private const val RADIATION_ROUND = 10.0
 private const val EXERCISE_DEFAULT = 90
 private const val EXERCISE_STEP = 10
 private const val EXERCISE_MAX = 600
+
+@WearPreview
+@Composable
+private fun HealthContentPreview() {
+    WearScreenPreview { HealthContent(view = PreviewData.healthView(), onSpo2Crash = {}, onUpdateManual = {}) }
+}
+
+@WearPreview
+@Composable
+private fun HealthLoadingPreview() {
+    WearScreenPreview { HealthContent(view = null, onSpo2Crash = {}, onUpdateManual = {}) }
+}

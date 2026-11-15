@@ -11,34 +11,31 @@ import androidx.wear.compose.material3.ColorScheme
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Typography
 import com.jintonic.app.R
-import com.jintonic.app.design.ColorRoles
-import com.jintonic.app.design.Palette
 import com.jintonic.app.pvt.Status
 import com.jintonic.app.vitals.AlertLevel
 
-// Colour roles come from shared (com.jintonic.app.design), the single source for Wear OS and watchOS.
-object FfdColors {
-    val Background = Color(ColorRoles.BACKGROUND)
-    val OnBackground = Color(ColorRoles.ON_BACKGROUND)
-    val LevelHigh = Color(ColorRoles.LEVEL_HIGH)
-    val LevelMid = Color(ColorRoles.LEVEL_MID)
-    val LevelLow = Color(ColorRoles.LEVEL_LOW)
-    val Primary = Color(ColorRoles.PRIMARY)
-    val AccentSoft = Color(ColorRoles.ACCENT_SOFT)
-    val AccentStrong = Color(ColorRoles.ACCENT_STRONG)
-    val TextSecondary = Color(ColorRoles.TEXT_SECONDARY)
-    val Error = Color(Palette.Semantic.ERROR)
+// Black-and-white palette: neutrals only, with a single red reserved for danger.
+object AppColors {
+    val Background = Color(0xFF000000)
+    val OnBackground = Color(0xFFFFFFFF)
+    val TextSecondary = Color(0xFF84848C)
+    val Primary = Color(0xFFFFFFFF)
+    val AccentSoft = Color(0xFF84848C)
+    val AccentStrong = Color(0xFFFF3B30)
+    val LevelHigh = Color(0xFFFFFFFF)
+    val LevelMid = Color(0xFF84848C)
+    val LevelLow = Color(0xFFFF3B30)
+    val Error = Color(0xFFFF3B30)
 }
 
-// Shared dimensions that Material does not provide out of the box.
-object FfdSizes {
+// Dimensions Material does not provide out of the box.
+object AppSizes {
     val Ring = 92.dp
     val RingStroke = 8.dp
     val Stimulus = 72.dp
     val StimulusGlow = 20.dp
 }
 
-// Google Sans Flex (OFL), applied to the whole typography through the theme.
 val GoogleSansFlex = FontFamily(
     Font(R.font.google_sans_flex_regular, FontWeight.Normal),
     Font(R.font.google_sans_flex_medium, FontWeight.Medium),
@@ -47,15 +44,15 @@ val GoogleSansFlex = FontFamily(
 )
 
 fun Status.color(): Color = when (this) {
-    Status.GREEN -> FfdColors.LevelHigh
-    Status.YELLOW -> FfdColors.LevelMid
-    Status.RED -> FfdColors.Error
+    Status.GREEN -> AppColors.LevelHigh
+    Status.YELLOW -> AppColors.LevelMid
+    Status.RED -> AppColors.Error
 }
 
 fun AlertLevel.color(): Color = when (this) {
-    AlertLevel.NOMINAL -> FfdColors.LevelHigh
-    AlertLevel.WARNING -> FfdColors.LevelMid
-    AlertLevel.CRITICAL -> FfdColors.LevelLow
+    AlertLevel.NOMINAL -> AppColors.LevelHigh
+    AlertLevel.WARNING -> AppColors.LevelMid
+    AlertLevel.CRITICAL -> AppColors.LevelLow
 }
 
 @StringRes
@@ -65,40 +62,40 @@ fun AlertLevel.labelRes(): Int = when (this) {
     AlertLevel.CRITICAL -> R.string.level_critical
 }
 
-// Wear Material scheme rebuilt on the shared palette, so default components (cards, buttons, switches) match.
-private val FfdColorScheme = ColorScheme(
-    primary = Color(ColorRoles.PRIMARY),
-    primaryDim = Color(Palette.Blue.B600),
-    primaryContainer = Color(Palette.Blue.B800),
-    onPrimary = Color(ColorRoles.ON_PRIMARY),
-    onPrimaryContainer = Color(Palette.Blue.B100),
-    secondary = Color(ColorRoles.SECONDARY),
-    secondaryDim = Color(Palette.Orange.O600),
-    secondaryContainer = Color(Palette.Orange.O900),
-    onSecondary = Color(ColorRoles.ON_SECONDARY),
-    onSecondaryContainer = Color(Palette.Orange.O100),
-    tertiary = Color(Palette.Blue.B300),
-    tertiaryDim = Color(Palette.Blue.B500),
-    tertiaryContainer = Color(Palette.Blue.B900),
-    onTertiary = Color(Palette.Neutral.N800),
-    onTertiaryContainer = Color(Palette.Blue.B100),
-    surfaceContainerLow = Color(Palette.Neutral.N800),
-    surfaceContainer = Color(Palette.Neutral.N800),
-    surfaceContainerHigh = Color(Palette.Neutral.N700),
-    onSurface = Color(Palette.Neutral.N0),
-    onSurfaceVariant = Color(Palette.Neutral.N300),
-    outline = Color(Palette.Neutral.N500),
-    outlineVariant = Color(Palette.Neutral.N600),
-    background = Color(ColorRoles.BACKGROUND),
-    onBackground = Color(ColorRoles.ON_BACKGROUND),
-    error = Color(Palette.Semantic.ERROR),
-    onError = Color(Palette.Neutral.N0),
+// Monochrome scheme so default components (cards, buttons, switches) read black-and-white.
+private val AppColorScheme = ColorScheme(
+    primary = Color(0xFFFFFFFF),
+    primaryDim = Color(0xFFE5E5EA),
+    primaryContainer = Color(0xFF2C2C2E),
+    onPrimary = Color(0xFF000000),
+    onPrimaryContainer = Color(0xFFFFFFFF),
+    secondary = Color(0xFF84848C),
+    secondaryDim = Color(0xFF6E6E73),
+    secondaryContainer = Color(0xFF2C2C2E),
+    onSecondary = Color(0xFF000000),
+    onSecondaryContainer = Color(0xFFFFFFFF),
+    tertiary = Color(0xFFAEAEB2),
+    tertiaryDim = Color(0xFF84848C),
+    tertiaryContainer = Color(0xFF2C2C2E),
+    onTertiary = Color(0xFF000000),
+    onTertiaryContainer = Color(0xFFFFFFFF),
+    surfaceContainerLow = Color(0xFF1C1C1E),
+    surfaceContainer = Color(0xFF1C1C1E),
+    surfaceContainerHigh = Color(0xFF2C2C2E),
+    onSurface = Color(0xFFFFFFFF),
+    onSurfaceVariant = Color(0xFFAEAEB2),
+    outline = Color(0xFF6E6E73),
+    outlineVariant = Color(0xFF48484A),
+    background = Color(0xFF000000),
+    onBackground = Color(0xFFFFFFFF),
+    error = Color(0xFFFF3B30),
+    onError = Color(0xFFFFFFFF),
 )
 
 @Composable
-fun FfdTheme(content: @Composable () -> Unit) {
+fun AppTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = FfdColorScheme,
+        colorScheme = AppColorScheme,
         typography = Typography(defaultFontFamily = GoogleSansFlex),
         content = content,
     )

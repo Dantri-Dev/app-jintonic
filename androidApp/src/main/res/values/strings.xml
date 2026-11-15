@@ -17,11 +17,9 @@
     <string name="title_readiness">Readiness</string>
     <string name="title_cognitive">Salute</string>
 
-    <!-- Onboarding -->
-    <string name="onboarding_subtitle">Misura lucidità e parametri vitali per dirti se sei in grado di lavorare.</string>
-    <string name="onboarding_permission">Serve l\'accesso alla frequenza cardiaca. Se neghi, viene simulata.</string>
-
     <!-- Home -->
+    <string name="home_readiness">🔥 Readiness</string>
+    <string name="home_percent">%1$d %%</string>
     <plurals name="streak_days">
         <item quantity="one">🔥 %d giorno</item>
         <item quantity="other">🔥 %d giorni</item>

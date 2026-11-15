@@ -25,8 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
-import com.jintonic.app.ui.theme.FfdColors
-import com.jintonic.app.ui.theme.FfdSizes
+import com.jintonic.app.ui.theme.AppColors
+import com.jintonic.app.ui.theme.AppSizes
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -49,7 +49,7 @@ fun ScoreArc(score: Int?, label: String, caption: String, color: Color, modifier
     val fill = if (progress == 0f) 1f else progress
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.fillMaxSize().padding(2.dp)) {
-            val stroke = FfdSizes.RingStroke.toPx()
+            val stroke = AppSizes.RingStroke.toPx()
             val amp = WAVE_AMPLITUDE.toPx()
             val radius = size.minDimension / 2f - stroke / 2f - amp
             val center = Offset(size.width / 2f, size.height / 2f)
@@ -61,11 +61,11 @@ fun ScoreArc(score: Int?, label: String, caption: String, color: Color, modifier
                 text = score?.toString() ?: "--",
                 style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.Bold,
-                color = FfdColors.OnBackground,
+                color = AppColors.OnBackground,
             )
-            Text(label.uppercase(), style = MaterialTheme.typography.labelSmall, color = FfdColors.TextSecondary)
+            Text(label.uppercase(), style = MaterialTheme.typography.labelSmall, color = AppColors.TextSecondary)
             if (caption.isNotEmpty()) {
-                Text(caption, style = MaterialTheme.typography.labelSmall, color = FfdColors.AccentSoft)
+                Text(caption, style = MaterialTheme.typography.labelSmall, color = AppColors.AccentSoft)
             }
         }
     }
@@ -101,12 +101,12 @@ private fun DrawScope.drawWave(center: Offset, radius: Float, amp: Float, stroke
 
 // Label over value, centred: long labels never squeeze or split the value on a round face.
 @Composable
-fun InfoRow(label: String, value: String, valueColor: Color = FfdColors.OnBackground) {
+fun InfoRow(label: String, value: String, valueColor: Color = AppColors.OnBackground) {
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = FfdColors.TextSecondary,
+            color = AppColors.TextSecondary,
             textAlign = TextAlign.Center,
         )
         Text(
@@ -121,7 +121,7 @@ fun InfoRow(label: String, value: String, valueColor: Color = FfdColors.OnBackgr
 
 // One-line explanation under a hero or at the foot of a list.
 @Composable
-fun Hint(text: String, modifier: Modifier = Modifier, color: Color = FfdColors.TextSecondary) {
+fun Hint(text: String, modifier: Modifier = Modifier, color: Color = AppColors.TextSecondary) {
     Text(
         text = text,
         modifier = modifier.fillMaxWidth().padding(horizontal = 10.dp),
@@ -133,7 +133,7 @@ fun Hint(text: String, modifier: Modifier = Modifier, color: Color = FfdColors.T
 
 // Empty / error state: an outlined icon over one explanatory line.
 @Composable
-fun EmptyState(icon: ImageVector, text: String, tint: Color = FfdColors.TextSecondary, modifier: Modifier = Modifier) {
+fun EmptyState(icon: ImageVector, text: String, tint: Color = AppColors.TextSecondary, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
