@@ -21,7 +21,7 @@
     <string name="cd_tap">Tocca</string>
 
     <!-- Result -->
-    <string name="result_ok">Sei pronto</string>
+    <string name="result_ok">Sei a posto!</string>
     <string name="result_warning">Test incompleto</string>
     <string name="result_at_risk">Sei a rischio</string>
     <string name="session_save_failed">Impossibile salvare la sessione.</string>
