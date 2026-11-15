@@ -21,9 +21,9 @@
     <application
         android:name=".JintonicApplication"
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher_logo"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/ic_launcher_logo"
+        android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault">
 
@@ -36,7 +36,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:taskAffinity=""
-            android:theme="@android:style/Theme.DeviceDefault">
+            android:theme="@style/Theme.Jintonic.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

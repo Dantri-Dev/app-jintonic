@@ -38,6 +38,7 @@ import com.jintonic.app.core.compose.WearPreview
 import com.jintonic.app.core.compose.WearScreenPreview
 import com.jintonic.app.core.states.ResultState
 import com.jintonic.app.presentation.components.AppButton
+import com.jintonic.app.presentation.components.appearOnce
 import com.jintonic.app.presentation.components.debouncedHaptic
 import com.jintonic.app.presentation.components.pressBounceObserving
 import com.jintonic.app.presentation.theme.AppColors
@@ -105,7 +106,7 @@ private fun HomeContent(
         ui?.hasResult == true -> stringResource(R.string.home_readiness)
         else -> stringResource(R.string.home_readiness_idle)
     }
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(modifier = Modifier.fillMaxSize().appearOnce(), contentAlignment = Alignment.Center) {
         // Mount the ring only once the score is known, so the indicator composes with its real value.
         if (ready && ui != null) {
             CircularProgressIndicator(

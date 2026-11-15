@@ -7,6 +7,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.content.ContextCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.jintonic.app.data.sensors.VitalsMonitor
 import com.jintonic.app.presentation.navigation.AppNavHost
 import com.jintonic.app.presentation.theme.AppTheme
@@ -17,6 +18,7 @@ class MainActivity : ComponentActivity() {
     private val vitals: VitalsMonitor by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         val sensor = heartRatePermission()
         val permissions = requiredPermissions(sensor)
