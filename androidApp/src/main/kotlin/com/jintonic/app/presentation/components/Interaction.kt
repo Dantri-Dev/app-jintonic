@@ -5,8 +5,13 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
@@ -70,6 +75,22 @@ fun Modifier.tappable(onClick: () -> Unit): Modifier {
     val source = remember { MutableInteractionSource() }
     val action = debouncedHaptic(onClick)
     return pressBounce(source).clickable(interactionSource = source, indication = null, onClick = action)
+}
+
+// Press bounce for a component that owns its own click but exposes no interaction source
+// (e.g. the preset dialog buttons): observes presses without consuming them.
+@Composable
+fun Modifier.pressBounceObserving(): Modifier {
+    val source = remember { MutableInteractionSource() }
+    return pressBounce(source).pointerInput(Unit) {
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            val press = PressInteraction.Press(down.position)
+            source.tryEmit(press)
+            val up = waitForUpOrCancellation()
+            source.tryEmit(if (up != null) PressInteraction.Release(press) else PressInteraction.Cancel(press))
+        }
+    }
 }
 
 @Composable

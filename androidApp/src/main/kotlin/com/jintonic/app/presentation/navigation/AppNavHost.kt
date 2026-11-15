@@ -17,7 +17,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun AppNavHost(
     permissions: Array<String>,
     sensorPermission: String,
-    hasPermission: Boolean,
+    hasPermission: () -> Boolean,
     onPermissionResult: (Boolean) -> Unit,
 ) {
     val nav = rememberSwipeDismissableNavController()
@@ -32,18 +32,37 @@ fun AppNavHost(
                     sensorPermission = sensorPermission,
                     hasPermission = hasPermission,
                     onPermissionResult = onPermissionResult,
-                    onEnterPreflight = { testVm.begin(PvtMode.DEMO); nav.navigate(Routes.PREFLIGHT) },
-                    onEnterTest = { testVm.begin(PvtMode.DEMO); nav.navigate(Routes.TEST) },
+                    onEnterPreflight = {
+                        testVm.begin(PvtMode.DEMO)
+                        nav.navigate(Routes.PREFLIGHT) { launchSingleTop = true }
+                    },
+                    onEnterTest = {
+                        testVm.begin(PvtMode.DEMO)
+                        nav.navigate(Routes.TEST) { launchSingleTop = true }
+                    },
                 )
             }
             composable(Routes.PREFLIGHT) {
                 PreflightScreen(
                     vm = testVm,
-                    onStartTest = { nav.navigate(Routes.TEST) { popUpTo(Routes.PREFLIGHT) { inclusive = true } } },
+                    onStartTest = {
+                        nav.navigate(Routes.TEST) {
+                            popUpTo(Routes.PREFLIGHT) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
                 )
             }
             composable(Routes.TEST) {
-                PvtScreen(testVm, onFinished = { nav.navigate(Routes.RESULT) { popUpTo(Routes.HOME) } })
+                PvtScreen(
+                    testVm,
+                    onFinished = {
+                        nav.navigate(Routes.RESULT) {
+                            popUpTo(Routes.HOME)
+                            launchSingleTop = true
+                        }
+                    },
+                )
             }
             composable(Routes.RESULT) {
                 ResultScreen(vm = testVm, onDone = { nav.popBackStack(Routes.HOME, inclusive = false) })

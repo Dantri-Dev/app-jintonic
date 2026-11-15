@@ -8,8 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.PriorityHigh
+import androidx.compose.material.icons.outlined.Error
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,6 +21,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material3.AlertDialog
 import androidx.wear.compose.material3.AlertDialogDefaults
@@ -35,6 +39,7 @@ import com.jintonic.app.core.compose.WearScreenPreview
 import com.jintonic.app.core.states.ResultState
 import com.jintonic.app.presentation.components.AppButton
 import com.jintonic.app.presentation.components.debouncedHaptic
+import com.jintonic.app.presentation.components.pressBounceObserving
 import com.jintonic.app.presentation.theme.AppColors
 import com.jintonic.app.presentation.theme.AppSizes
 import com.jintonic.app.presentation.theme.RammettoOne
@@ -45,20 +50,32 @@ private const val SCORE_MAX = 100f
 private const val RING_START_ANGLE = 290f
 private const val RING_END_ANGLE = 250f
 private val RING_INSET = 4.dp
-private const val BUTTON_WIDTH_FRACTION = 0.6f
+private const val BUTTON_WIDTH_FRACTION = 0.52f
+// At 100% the score is three digits; shrink the font by 10% so it never touches the edges.
+private const val FULL_SCORE_FONT_SCALE = 0.9f
 
 @Composable
 fun HomeScreen(
     permissions: Array<String>,
     sensorPermission: String,
-    hasPermission: Boolean,
+    hasPermission: () -> Boolean,
     onPermissionResult: (Boolean) -> Unit,
     onEnterPreflight: () -> Unit,
     onEnterTest: () -> Unit,
     vm: HomeViewModel = koinViewModel(),
 ) {
     val state by vm.state.collectAsStateWithLifecycle()
-    var ready by remember { mutableStateOf(hasPermission) }
+    // Read the live grant state on entry and on every resume, so returning from the flow
+    // (or from system settings) never shows a stale "missing permissions".
+    var ready by remember { mutableStateOf(hasPermission()) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) ready = hasPermission()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         ready = permissions.all { result[it] == true }
         onPermissionResult(result[sensorPermission] == true)
@@ -104,12 +121,7 @@ private fun HomeContent(
             )
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = stringResource(R.string.home_percent, score),
-                style = MaterialTheme.typography.displayMedium,
-                fontFamily = RammettoOne,
-                color = AppColors.OnBackground,
-            )
+            ScorePercent(score)
             Text(
                 text = label,
                 style = MaterialTheme.typography.titleSmall,
@@ -141,16 +153,39 @@ private fun HomeContent(
     )
 }
 
+// The big readiness figure; at full score the three digits shrink a touch so they never touch the edges.
+@Composable
+private fun ScorePercent(score: Int) {
+    val style = MaterialTheme.typography.displayMedium
+    Text(
+        text = stringResource(R.string.home_percent, score),
+        style = style,
+        fontSize = if (score >= SCORE_MAX.toInt()) style.fontSize * FULL_SCORE_FONT_SCALE else style.fontSize,
+        fontFamily = RammettoOne,
+        color = AppColors.OnBackground,
+    )
+}
+
 // Asks whether to set new parameters before the test: confirm opens the pre-flight, dismiss goes straight to the test.
 @Composable
 private fun NewValuesDialog(show: Boolean, onDismiss: () -> Unit, onConfirm: () -> Unit, onSkip: () -> Unit) {
     AlertDialog(
         visible = show,
         onDismissRequest = onDismiss,
-        icon = { Icon(Icons.Outlined.PriorityHigh, contentDescription = null) },
+        icon = { Icon(Icons.Outlined.Error, contentDescription = null) },
         title = { Text(stringResource(R.string.dialog_new_values), textAlign = TextAlign.Center) },
-        confirmButton = { AlertDialogDefaults.ConfirmButton(onClick = debouncedHaptic(onConfirm)) },
-        dismissButton = { AlertDialogDefaults.DismissButton(onClick = debouncedHaptic(onSkip)) },
+        confirmButton = {
+            AlertDialogDefaults.ConfirmButton(
+                onClick = debouncedHaptic(onConfirm),
+                modifier = Modifier.pressBounceObserving(),
+            )
+        },
+        dismissButton = {
+            AlertDialogDefaults.DismissButton(
+                onClick = debouncedHaptic(onSkip),
+                modifier = Modifier.pressBounceObserving(),
+            )
+        },
     )
 }
 

@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
                 AppNavHost(
                     permissions = permissions,
                     sensorPermission = sensor,
-                    hasPermission = permissions.all { isGranted(it) },
+                    hasPermission = { permissions.all { isGranted(it) } },
                     // Denied (or permanently denied): HR falls back to simulation.
                     onPermissionResult = { granted -> vitals.start(sensorPermitted = granted) },
                 )

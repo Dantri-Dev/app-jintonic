@@ -3,13 +3,20 @@ package com.jintonic.app.presentation.test_flow
 import android.os.SystemClock
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -28,6 +35,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -38,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material3.CircularProgressIndicator
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.ProgressIndicatorDefaults
+import androidx.wear.compose.material3.ripple
 import com.jintonic.app.R
 import com.jintonic.app.core.Constants
 import com.jintonic.app.core.compose.WearPreview
@@ -88,24 +98,37 @@ fun PvtScreen(vm: TestFlowViewModel, onFinished: () -> Unit) {
         onFinished()
     }
 
-    val tapModifier = Modifier.pointerInput(Unit) {
+    // A tap in the empty wait is a false start; a visible stimulus is tapped on its own shape.
+    val visible = rememberUpdatedState(stimulusVisible)
+    val waitTapModifier = Modifier.pointerInput(Unit) {
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false)
-            // Only a tap on a visible stimulus buzzes; taps in the empty wait stay silent.
-            if (stimulusVisible) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-            taps.trySend(down.uptimeMillis)
+            if (!visible.value) taps.trySend(down.uptimeMillis)
         }
     }
-    PvtContent(progress = progress, stimulusVisible = stimulusVisible, tapModifier = tapModifier)
+    PvtContent(
+        progress = progress,
+        stimulusVisible = stimulusVisible,
+        waitTapModifier = waitTapModifier,
+        onStimulusTap = { at ->
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            taps.trySend(at)
+        },
+    )
 }
 
 // Progress ring around the bezel; the stimulus appears at the centre.
 @Composable
-private fun PvtContent(progress: Float, stimulusVisible: Boolean, tapModifier: Modifier = Modifier) {
+private fun PvtContent(
+    progress: Float,
+    stimulusVisible: Boolean,
+    waitTapModifier: Modifier = Modifier,
+    onStimulusTap: (Long) -> Unit = {},
+) {
     // Read the latest progress inside the draw lambda so the indicator follows the running clock.
     val liveProgress = rememberUpdatedState(progress)
     Box(
-        modifier = Modifier.fillMaxSize().then(tapModifier),
+        modifier = Modifier.fillMaxSize().then(waitTapModifier),
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator(
@@ -119,25 +142,54 @@ private fun PvtContent(progress: Float, stimulusVisible: Boolean, tapModifier: M
                 trackColor = AppColors.TrackDim,
             ),
         )
-        if (stimulusVisible) Stimulus()
+        if (stimulusVisible) Stimulus(onTap = onStimulusTap)
     }
 }
 
-// Nine-lobed cookie that pulses to draw the eye, with a tap glyph telling you to touch it.
+// Nine-lobed cookie that springs in and pulses to draw the eye; a tap shows a ripple clipped
+// to its shape and reports the moment it went down.
 @Composable
-private fun Stimulus() {
+private fun Stimulus(onTap: (Long) -> Unit) {
     val haptic = LocalHapticFeedback.current
     LaunchedEffect(Unit) { haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
     val shape = remember { Cookie9Shape() }
+    val interaction = remember { MutableInteractionSource() }
+
+    // Entrance: springs up from nothing so it never pops in abruptly.
+    var shown by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { shown = true }
+    val appear by animateFloatAsState(
+        targetValue = if (shown) 1f else 0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "appear",
+    )
     val transition = rememberInfiniteTransition(label = "pulse")
-    val scale by transition.animateFloat(
+    val pulse by transition.animateFloat(
         initialValue = PULSE_MIN,
         targetValue = PULSE_MAX,
         animationSpec = infiniteRepeatable(tween(PULSE_MS, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "pulse",
     )
     Box(
-        modifier = Modifier.size(AppSizes.Stimulus).scale(scale).background(AppColors.Tertiary, shape),
+        modifier = Modifier
+            .size(AppSizes.Stimulus)
+            .scale(appear * pulse)
+            .alpha(appear)
+            .clip(shape)
+            .background(AppColors.Tertiary)
+            .indication(interaction, ripple(color = AppColors.OnBackground))
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    val press = PressInteraction.Press(down.position)
+                    interaction.tryEmit(press)
+                    onTap(down.uptimeMillis)
+                    val up = waitForUpOrCancellation()
+                    interaction.tryEmit(
+                        if (up != null) PressInteraction.Release(press) else PressInteraction.Cancel(press),
+                    )
+                }
+            },
         contentAlignment = Alignment.Center,
     ) {
         Icon(

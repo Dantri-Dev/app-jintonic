@@ -100,7 +100,7 @@ private fun PreflightStep(
     val cd = stringResource(if (last) R.string.cd_confirm else R.string.cd_next)
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(top = 6.dp, bottom = 38.dp),
+            modifier = Modifier.fillMaxSize().padding(top = 10.dp, bottom = 38.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(

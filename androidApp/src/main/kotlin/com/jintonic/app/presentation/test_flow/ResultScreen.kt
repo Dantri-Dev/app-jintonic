@@ -3,11 +3,14 @@ package com.jintonic.app.presentation.test_flow
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material3.CircularProgressIndicator
@@ -55,6 +58,8 @@ private fun ResultContent(state: ResultState<TestOutcome>, onDone: () -> Unit) {
 
 @Composable
 private fun SuccessResult(text: String, onDone: () -> Unit) {
+    val haptic = LocalHapticFeedback.current
+    LaunchedEffect(Unit) { haptic.performHapticFeedback(HapticFeedbackType.Confirm) }
     val style = ConfirmationDialogDefaults.curvedTextStyle
     SuccessConfirmationDialog(
         visible = true,
@@ -70,6 +75,8 @@ private fun SuccessResult(text: String, onDone: () -> Unit) {
 
 @Composable
 private fun FailureResult(text: String, onDone: () -> Unit) {
+    val haptic = LocalHapticFeedback.current
+    LaunchedEffect(Unit) { haptic.performHapticFeedback(HapticFeedbackType.Reject) }
     val style = ConfirmationDialogDefaults.curvedTextStyle
     FailureConfirmationDialog(
         visible = true,
