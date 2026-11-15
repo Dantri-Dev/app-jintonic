@@ -4,6 +4,7 @@ struct PvtView: View {
     @ObservedObject var vm: TestFlowViewModel
     let onFinished: () -> Void
     @StateObject private var runner: PvtRunner
+    @State private var shown = false
     @State private var pulse = false
 
     init(vm: TestFlowViewModel, onFinished: @escaping () -> Void) {
@@ -15,17 +16,9 @@ struct PvtView: View {
 
     var body: some View {
         ZStack {
-            FfdColors.background.ignoresSafeArea()
-
-            Text(formatClock(runner.remainingMs))
-                .font(.footnote)
-                .foregroundStyle(FfdColors.textSecondary)
-                .frame(maxHeight: .infinity, alignment: .top)
-                .padding(.top, 8)
-
-            if runner.stimulusVisible {
-                stimulus
-            }
+            AppColors.background.ignoresSafeArea()
+            RingView(progress: runner.progress).padding(4)
+            if runner.stimulusVisible { stimulus }
         }
         .contentShape(Rectangle())
         .onTapGesture {
@@ -43,24 +36,22 @@ struct PvtView: View {
         }
     }
 
-    // Solid ball that pulses slowly to draw the eye, with a tap glyph.
+    // A normal blue ball that springs in and pulses to draw the eye, with a tap glyph.
     private var stimulus: some View {
         ZStack {
             Circle()
-                .fill(FfdColors.primary)
-                .frame(width: FfdSizes.stimulus, height: FfdSizes.stimulus)
-                .scaleEffect(pulse ? 1.1 : 0.86)
+                .fill(AppColors.tertiary)
+                .frame(width: AppSizes.stimulus, height: AppSizes.stimulus)
+                .scaleEffect(pulse ? 1.08 : 0.9)
                 .animation(.easeInOut(duration: 0.85).repeatForever(autoreverses: true), value: pulse)
             Image(systemName: "hand.tap.fill")
-                .font(.system(size: 30))
-                .foregroundStyle(FfdColors.onBackground)
+                .font(.system(size: 28))
+                .foregroundStyle(AppColors.onBackground)
         }
-        .onAppear { pulse = true }
-        .onDisappear { pulse = false }
-    }
-
-    private func formatClock(_ ms: Int64) -> String {
-        let totalSec = Int((ms + 999) / 1000)
-        return String(format: "%d:%02d", totalSec / 60, totalSec % 60)
+        .scaleEffect(shown ? 1 : 0.5)
+        .opacity(shown ? 1 : 0)
+        .animation(.spring(response: 0.32, dampingFraction: 0.5), value: shown)
+        .onAppear { shown = true; pulse = true }
+        .onDisappear { shown = false; pulse = false }
     }
 }

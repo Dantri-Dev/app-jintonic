@@ -1,44 +1,70 @@
 import SwiftUI
 
+// Single hero. Missing permission: no ring, 0 % and a grant action. Ready: the last
+// test's cognitive score on a ring that fills up, and the test action.
 struct HomeView: View {
-    let onStartTest: () -> Void
-    let onNavigate: (Route) -> Void
+    let onEnterPreflight: () -> Void
+    let onEnterTest: () -> Void
 
     @EnvironmentObject private var store: SessionStore
-    @EnvironmentObject private var vitals: VitalsMonitor
+    @StateObject private var gate = PermissionGate()
+    @State private var askNewValues = false
+    @State private var fill: Double = 0
+    @State private var appeared = false
+
+    private var lastScore: Int? { store.sessions.last?.cognitiveScore }
 
     var body: some View {
-        let ui = makeHomeUi(sessions: store.sessions, manual: store.manual, snapshot: vitals.snapshot)
-        ScrollView {
-            VStack(spacing: 10) {
-                ScoreArc(score: ui.readiness,
-                         label: L.titleReadiness,
-                         caption: ui.streakDays > 0 ? L.streakDays(ui.streakDays) : "",
-                         color: ui.status.color)
-                    .frame(height: 180)
+        let score = gate.ready ? (lastScore ?? 0) : 0
+        ZStack {
+            AppColors.background.ignoresSafeArea()
 
-                menu(pendingSync: ui.pendingSync)
+            if gate.ready && lastScore != nil {
+                RingView(progress: fill).padding(4)
             }
-            .padding(.horizontal, 10)
+
+            VStack(spacing: 6) {
+                Text(L.percent(score))
+                    .font(.system(size: score >= 100 ? 40 : 44, weight: .heavy, design: .rounded))
+                    .foregroundStyle(AppColors.onBackground)
+                Text(label)
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(AppColors.onBackground)
+                cta
+                    .frame(maxWidth: 130)
+                    .padding(.top, 8)
+                    .scaleEffect(appeared ? 1 : 0.84)
+                    .animation(.spring(response: 0.42, dampingFraction: 0.55), value: appeared)
+            }
+            .opacity(appeared ? 1 : 0)
+            .offset(y: appeared ? 0 : 8)
         }
-        .safeAreaInset(edge: .bottom) {
-            FfdButton(L.actionDoTest, action: onStartTest)
-                .padding(.horizontal, 12)
+        .task { await gate.refresh(); animateFill() }
+        .onAppear { withAnimation(.easeOut(duration: 0.28)) { appeared = true } }
+        .onChange(of: gate.ready) { animateFill() }
+        .onChange(of: store.sessions.count) { animateFill() }
+        .alert(L.dialogNewValues, isPresented: $askNewValues) {
+            Button(L.dialogYes) { onEnterPreflight() }
+            Button(L.dialogNo, role: .cancel) { onEnterTest() }
         }
-        .background(FfdColors.background)
-        .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func menu(pendingSync: Int) -> some View {
-        VStack(spacing: 6) {
-            FfdButton(L.navHistory, kind: .tonal) { onNavigate(.history) }
-            FfdButton(L.navBody, kind: .tonal) { onNavigate(.body) }
-            FfdButton(L.navParams, kind: .tonal) { onNavigate(.params) }
-            FfdButton(L.navEmergency, kind: .destructive) { onNavigate(.emergency) }
-            if pendingSync > 0 {
-                Hint(L.pendingSync(pendingSync), color: FfdColors.accentSoft)
-            }
+    private var label: String {
+        if !gate.ready { return L.permissionsMissing }
+        return lastScore != nil ? L.readiness : L.readinessIdle
+    }
+
+    @ViewBuilder
+    private var cta: some View {
+        if gate.ready {
+            AppButton(L.actionDoTest) { askNewValues = true }
+        } else {
+            AppButton(L.actionGrant) { Task { await gate.request() } }
         }
-        .padding(.bottom, 8)
+    }
+
+    private func animateFill() {
+        let target = gate.ready ? Double(lastScore ?? 0) / 100.0 : 0
+        withAnimation(.easeInOut(duration: 0.75)) { fill = target }
     }
 }

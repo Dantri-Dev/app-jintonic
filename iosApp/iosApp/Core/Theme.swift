@@ -1,66 +1,39 @@
 import SwiftUI
-import Shared
 
-// Colour roles come from the shared engine (com.jintonic.app.design), the single
-// source for Wear OS and watchOS. ARGB Int64 values are unpacked into SwiftUI Color.
+// Clean black-and-white palette, one red for danger and one blue for the test stimulus.
+// Defined locally so the watch UI owns its look (no shared design dependency).
 extension Color {
-    init(argb: Int64) {
-        let a = Double((argb >> 24) & 0xFF) / 255.0
-        let r = Double((argb >> 16) & 0xFF) / 255.0
-        let g = Double((argb >> 8) & 0xFF) / 255.0
-        let b = Double(argb & 0xFF) / 255.0
-        self.init(.sRGB, red: r, green: g, blue: b, opacity: a)
+    init(hex: UInt32) {
+        let r = Double((hex >> 16) & 0xFF) / 255.0
+        let g = Double((hex >> 8) & 0xFF) / 255.0
+        let b = Double(hex & 0xFF) / 255.0
+        self.init(.sRGB, red: r, green: g, blue: b, opacity: 1)
     }
 }
 
-enum FfdColors {
-    private static let roles = ColorRoles.shared
-
-    static let background = Color(argb: roles.BACKGROUND)
-    static let onBackground = Color(argb: roles.ON_BACKGROUND)
-    static let primary = Color(argb: roles.PRIMARY)
-    static let secondary = Color(argb: roles.SECONDARY)
-    static let levelHigh = Color(argb: roles.LEVEL_HIGH)
-    static let levelMid = Color(argb: roles.LEVEL_MID)
-    static let levelLow = Color(argb: roles.LEVEL_LOW)
-    static let accentSoft = Color(argb: roles.ACCENT_SOFT)
-    static let accentStrong = Color(argb: roles.ACCENT_STRONG)
-    static let textSecondary = Color(argb: roles.TEXT_SECONDARY)
-    static let surface = Color(argb: roles.SURFACE)
-    static let error = Color(argb: Palette.Semantic.shared.ERROR)
+enum AppColors {
+    static let background = Color.black
+    static let onBackground = Color.white
+    static let textSecondary = Color(hex: 0x84848C)
+    static let primary = Color.white
+    static let tertiary = Color(hex: 0x0088FF) // test stimulus only
+    static let error = Color(hex: 0xFF3B30)
+    static let trackDim = Color(hex: 0x3A3A3C)
 }
 
-enum FfdSizes {
-    static let ring: CGFloat = 108
+enum AppSizes {
     static let ringStroke: CGFloat = 8
-    static let waveAmplitude: CGFloat = 4
-    static let stimulus: CGFloat = 76
+    static let stimulus: CGFloat = 80
+    // Open ring: a gap centred at the top, active arc running clockwise around it.
+    static let ringGapDegrees: Double = 40
 }
 
-extension FfdStatus {
+extension ScoreStatus {
     var color: Color {
         switch self {
-        case .green: return FfdColors.levelHigh
-        case .yellow: return FfdColors.levelMid
-        case .red: return FfdColors.error
-        }
-    }
-}
-
-extension FfdLevel {
-    var color: Color {
-        switch self {
-        case .nominal: return FfdColors.levelHigh
-        case .warning: return FfdColors.levelMid
-        case .critical: return FfdColors.levelLow
-        }
-    }
-
-    var label: String {
-        switch self {
-        case .nominal: return L.levelNominal
-        case .warning: return L.levelWarning
-        case .critical: return L.levelCritical
+        case .green: return AppColors.onBackground
+        case .yellow: return AppColors.onBackground
+        case .red: return AppColors.error
         }
     }
 }

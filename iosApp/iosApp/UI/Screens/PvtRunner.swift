@@ -12,6 +12,11 @@ final class PvtRunner: ObservableObject {
     private let nextDelay: () -> Int64
     private var endAt: Int64 = 0
 
+    // Below this much time left, don't start another stimulus: it would overrun the clock.
+    private static let minResponseWindowMs: Int64 = 800
+
+    var progress: Double { durationMs <= 0 ? 0 : Double(durationMs - remainingMs) / Double(durationMs) }
+
     // Single-waiter tap channel with last-value conflation (Channel.CONFLATED).
     private var waiter: CheckedContinuation<Int64?, Never>?
     private var buffered: Int64?
@@ -69,21 +74,23 @@ final class PvtRunner: ObservableObject {
                 trials.append(PvtTrial(stimulusAtMs: early,
                                        responseAtMs: KotlinLong(longLong: early),
                                        falseStart: true))
-            } else if remaining() > 0 {
-                trials.append(await presentStimulus())
+            } else if remaining() >= Self.minResponseWindowMs {
+                // Cap the response window to what's left so the session never overruns its clock.
+                let window = min(Int64(AppConstants.pvtTimeoutSec * 1000), remaining())
+                trials.append(await presentStimulus(maxWaitMs: window))
             }
         }
         stimulusVisible = false
         return trials
     }
 
-    private func presentStimulus() async -> PvtTrial {
+    private func presentStimulus(maxWaitMs: Int64) async -> PvtTrial {
         buffered = nil
         stimulusVisible = true
         // Let the ball render before stamping the shown time.
         try? await Task.sleep(nanoseconds: 32_000_000)
         let shownAt = nowMs()
-        let response = await tapOrTimeout(ms: Int64(AppConstants.pvtTimeoutSec * 1000))
+        let response = await tapOrTimeout(ms: maxWaitMs)
         stimulusVisible = false
         return PvtTrial(stimulusAtMs: shownAt,
                         responseAtMs: response.map { KotlinLong(longLong: $0) },

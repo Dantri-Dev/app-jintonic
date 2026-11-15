@@ -20,7 +20,7 @@ struct JintonicApp: App {
                 .environmentObject(store)
                 .environmentObject(vitals)
                 .environmentObject(testVM)
-                .tint(FfdColors.primary)
+                .tint(AppColors.onBackground)
         }
     }
 }

@@ -1,66 +1,52 @@
 import SwiftUI
-import Shared
 
+// Reassuring success or an at-risk warning, then it shrinks and leaves on its own.
 struct ResultView: View {
     @ObservedObject var vm: TestFlowViewModel
     let onDone: () -> Void
+    @State private var closing = false
 
     var body: some View {
-        content
-            .safeAreaInset(edge: .bottom) {
-                FfdButton(L.actionDone, action: onDone)
-                    .padding(.horizontal, 12)
-            }
-            .background(FfdColors.background)
-            .navigationBarBackButtonHidden(true)
+        ZStack {
+            AppColors.background.ignoresSafeArea()
+            content
+        }
+        .navigationBarBackButtonHidden(true)
     }
 
     @ViewBuilder
     private var content: some View {
         switch vm.state {
         case let .success(outcome):
-            successView(outcome.cognitive)
-        case .failure(let message):
-            EmptyState(systemImage: "exclamationmark.triangle", text: message, tint: FfdColors.accentStrong)
-                .frame(maxHeight: .infinity)
+            let atRisk = ScoreStatus(outcome.cognitive.status) == .red || outcome.cognitive.escalateToSurgeon
+            outcomeView(atRisk: atRisk, text: atRisk ? L.resultAtRisk : L.resultOk)
+        case let .failure(message):
+            outcomeView(atRisk: true, text: message)
         default:
-            ProgressView().frame(maxHeight: .infinity)
+            ProgressView().tint(AppColors.onBackground)
         }
     }
 
-    private func successView(_ cognitive: CognitiveAssessment) -> some View {
-        let status = FfdStatus(cognitive.status)
-        return ScrollView {
-            VStack(spacing: 10) {
-                ScoreArc(score: Int(cognitive.score),
-                         label: L.titleCognitive,
-                         color: status.color)
-                    .frame(height: 180)
-
-                VStack(spacing: 6) {
-                    Hint(headline(status), color: FfdColors.onBackground)
-                    if let alert = alert(cognitive) {
-                        Hint(alert.text, color: alert.color)
-                    }
-                }
-                .padding(.bottom, 8)
+    private func outcomeView(atRisk: Bool, text: String) -> some View {
+        VStack(spacing: 10) {
+            Image(systemName: atRisk ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
+                .font(.system(size: 52))
+                .foregroundStyle(atRisk ? AppColors.error : AppColors.onBackground)
+            Text(text)
+                .font(.headline)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(AppColors.onBackground)
+        }
+        .padding(.horizontal, 12)
+        .scaleEffect(closing ? 0.8 : 1)
+        .onAppear {
+            if atRisk { Haptics.failure() } else { Haptics.success() }
+            Task {
+                try? await Task.sleep(nanoseconds: 1_900_000_000)
+                withAnimation(.easeIn(duration: 0.22)) { closing = true }
+                try? await Task.sleep(nanoseconds: 230_000_000)
+                onDone()
             }
-            .padding(.horizontal, 10)
         }
-    }
-
-    private func headline(_ status: FfdStatus) -> String {
-        switch status {
-        case .green: return L.headlineGreen
-        case .yellow: return L.headlineYellow
-        case .red: return L.headlineRed
-        }
-    }
-
-    private func alert(_ cognitive: CognitiveAssessment) -> (text: String, color: Color)? {
-        if cognitive.escalateToSurgeon { return (L.alertSurgeon, FfdColors.accentStrong) }
-        if cognitive.perceivedMismatch { return (L.alertMismatch, FfdColors.accentSoft) }
-        if cognitive.sleepWarning { return (L.alertSleep, FfdColors.accentSoft) }
-        return nil
     }
 }

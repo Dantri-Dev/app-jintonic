@@ -6,7 +6,7 @@ struct TestOutcome {
     let result: PvtResult
 }
 
-// One view model for the whole flow: Pre-test -> PVT -> Result.
+// One view model for the whole flow: optional pre-flight -> PVT -> result.
 @MainActor
 final class TestFlowViewModel: ObservableObject {
     enum State {
@@ -15,12 +15,6 @@ final class TestFlowViewModel: ObservableObject {
         case failure(String)
     }
 
-    struct Form {
-        var sleepHours: Float = AppConstants.sleepDefaultHours
-        var mood: Int = AppConstants.moodDefault
-    }
-
-    @Published var form = Form()
     @Published private(set) var state: State = .idle
     private(set) var mode: PvtMode = .demo
 
@@ -39,8 +33,14 @@ final class TestFlowViewModel: ObservableObject {
         state = .idle
     }
 
-    func setSleep(_ hours: Float) { form.sleepHours = hours }
-    func setMood(_ mood: Int) { form.mood = mood }
+    // Persists the pre-flight parameters so the health assessment uses them for this test.
+    func savePreflight(glucoseMgDl: Int, stress: Int, exerciseMinPerDay: Int) {
+        var entry = store.manual
+        entry.glucoseMgDl = glucoseMgDl
+        entry.stress = stress
+        entry.exerciseMinPerDay = exerciseMinPerDay
+        store.saveManual(entry)
+    }
 
     func nextStimulusDelayMs() -> Int64 { engine.nextStimulusDelayMs() }
 
@@ -54,20 +54,20 @@ final class TestFlowViewModel: ObservableObject {
         let result = engine.evaluate(trials: trials)
         let cognitive = engine.assessCognitive(
             result: result,
-            answers: PreTestAnswers(sleepHours: form.sleepHours, mood: Int32(form.mood)),
+            answers: PreTestAnswers(sleepHours: AppConstants.sleepDefaultHours, mood: Int32(AppConstants.moodDefault)),
             history: past.map { $0.pvt.toResult() }
         )
         let snapshot = vitals.snapshot
-        let health = HealthEvaluation.evaluate(engine: engine, snapshot: snapshot,
-                                               manual: store.manual, lastSession: past.last).assessment
-        let isRed = FfdStatus(cognitive.status) == .red
+        let health = HealthEvaluation.assessment(engine: engine, snapshot: snapshot,
+                                                 manual: store.manual, lastSession: past.last)
+        let isRed = ScoreStatus(cognitive.status) == .red
         let record = SessionRecord(
             id: UUID().uuidString,
             timestampMs: Int64(Date().timeIntervalSince1970 * 1000),
             mode: mode.name,
             pvt: PvtSnapshot.from(result),
-            sleepHours: form.sleepHours,
-            mood: form.mood,
+            sleepHours: AppConstants.sleepDefaultHours,
+            mood: AppConstants.moodDefault,
             cognitiveScore: Int(cognitive.score),
             status: cognitive.status.name,
             escalated: cognitive.escalateToSurgeon,

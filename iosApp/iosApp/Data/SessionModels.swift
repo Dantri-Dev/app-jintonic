@@ -19,7 +19,7 @@ struct SessionRecord: Codable, Identifiable {
     let pendingSync: Bool
 
     var date: Date { Date(timeIntervalSince1970: Double(timestampMs) / 1000.0) }
-    var ffdStatus: FfdStatus {
+    var scoreStatus: ScoreStatus {
         switch status {
         case "GREEN": return .green
         case "RED": return .red
