@@ -9,8 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Error
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,6 +43,7 @@ import com.jintonic.app.core.compose.WearScreenPreview
 import com.jintonic.app.core.states.ResultState
 import com.jintonic.app.presentation.components.AppButton
 import com.jintonic.app.presentation.components.appearOnce
+import com.jintonic.app.presentation.components.bounceInOnce
 import com.jintonic.app.presentation.components.debouncedHaptic
 import com.jintonic.app.presentation.components.pressBounceObserving
 import com.jintonic.app.presentation.theme.AppColors
@@ -51,6 +56,7 @@ private const val SCORE_MAX = 100f
 private const val RING_START_ANGLE = 290f
 private const val RING_END_ANGLE = 250f
 private val RING_INSET = 4.dp
+private const val RING_FILL_MS = 750
 private const val BUTTON_WIDTH_FRACTION = 0.52f
 // At 100% the score is three digits; shrink the font by 10% so it never touches the edges.
 private const val FULL_SCORE_FONT_SCALE = 0.9f
@@ -107,20 +113,8 @@ private fun HomeContent(
         else -> stringResource(R.string.home_readiness_idle)
     }
     Box(modifier = Modifier.fillMaxSize().appearOnce(), contentAlignment = Alignment.Center) {
-        // Mount the ring only once the score is known, so the indicator composes with its real value.
-        if (ready && ui != null) {
-            CircularProgressIndicator(
-                progress = { score / SCORE_MAX },
-                modifier = Modifier.fillMaxSize().padding(RING_INSET),
-                startAngle = RING_START_ANGLE,
-                endAngle = RING_END_ANGLE,
-                strokeWidth = AppSizes.RingStroke,
-                colors = ProgressIndicatorDefaults.colors(
-                    indicatorColor = AppColors.OnBackground,
-                    trackColor = AppColors.TrackDim,
-                ),
-            )
-        }
+        // Show the ring only once the score is known, then let it fill up to that score.
+        if (ready && ui != null) ReadinessRing(score)
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             ScorePercent(score)
             Text(
@@ -132,7 +126,7 @@ private fun HomeContent(
             )
             AppButton(
                 onClick = if (ready) ({ askNewValues = true }) else onGrant,
-                modifier = Modifier.fillMaxWidth(BUTTON_WIDTH_FRACTION).padding(top = 12.dp),
+                modifier = Modifier.fillMaxWidth(BUTTON_WIDTH_FRACTION).padding(top = 12.dp).bounceInOnce(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = AppColors.OnBackground,
                     contentColor = AppColors.Background,
@@ -151,6 +145,26 @@ private fun HomeContent(
         onDismiss = { askNewValues = false },
         onConfirm = { askNewValues = false; onEnterPreflight() },
         onSkip = { askNewValues = false; onEnterTest() },
+    )
+}
+
+// Readiness ring that fills up from empty to the score each time Home is shown.
+@Composable
+private fun ReadinessRing(score: Int) {
+    val fill = remember { Animatable(0f) }
+    LaunchedEffect(score) {
+        fill.animateTo(score / SCORE_MAX, animationSpec = tween(RING_FILL_MS, easing = FastOutSlowInEasing))
+    }
+    CircularProgressIndicator(
+        progress = { fill.value },
+        modifier = Modifier.fillMaxSize().padding(RING_INSET),
+        startAngle = RING_START_ANGLE,
+        endAngle = RING_END_ANGLE,
+        strokeWidth = AppSizes.RingStroke,
+        colors = ProgressIndicatorDefaults.colors(
+            indicatorColor = AppColors.OnBackground,
+            trackColor = AppColors.TrackDim,
+        ),
     )
 }
 

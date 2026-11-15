@@ -2,16 +2,21 @@ package com.jintonic.app.presentation.test_flow
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.WarningAmber
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.delay
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material3.CircularProgressIndicator
 import androidx.wear.compose.material3.ConfirmationDialogDefaults
@@ -27,6 +32,9 @@ import com.jintonic.app.core.states.ResultState
 import com.jintonic.app.presentation.theme.AppColors
 import com.jintonic.app.pvt.PvtResult
 import com.jintonic.app.pvt.Status
+
+private const val SUCCESS_CLOSE_MS = 220
+private const val SUCCESS_CLOSE_SCALE = 0.8f
 
 @Composable
 fun ResultScreen(vm: TestFlowViewModel, onDone: () -> Unit) {
@@ -58,12 +66,24 @@ private fun ResultContent(state: ResultState<TestOutcome>, onDone: () -> Unit) {
 
 @Composable
 private fun SuccessResult(text: String, onDone: () -> Unit) {
-    val haptic = LocalHapticFeedback.current
-    LaunchedEffect(Unit) { haptic.performHapticFeedback(HapticFeedbackType.Confirm) }
     val style = ConfirmationDialogDefaults.curvedTextStyle
+    // When its time is up, shrink a touch and then leave, rather than snapping shut.
+    var visible by remember { mutableStateOf(true) }
+    val scale by animateFloatAsState(
+        targetValue = if (visible) 1f else SUCCESS_CLOSE_SCALE,
+        animationSpec = tween(SUCCESS_CLOSE_MS),
+        label = "close",
+    )
+    LaunchedEffect(visible) {
+        if (!visible) {
+            delay(SUCCESS_CLOSE_MS.toLong())
+            onDone()
+        }
+    }
     SuccessConfirmationDialog(
-        visible = true,
-        onDismissRequest = onDone,
+        visible = visible,
+        onDismissRequest = { visible = false },
+        modifier = Modifier.scale(scale),
         curvedText = { confirmationDialogCurvedText(text, style) },
         colors = ConfirmationDialogDefaults.colors(
             iconColor = AppColors.Background,
@@ -75,8 +95,6 @@ private fun SuccessResult(text: String, onDone: () -> Unit) {
 
 @Composable
 private fun FailureResult(text: String, onDone: () -> Unit) {
-    val haptic = LocalHapticFeedback.current
-    LaunchedEffect(Unit) { haptic.performHapticFeedback(HapticFeedbackType.Reject) }
     val style = ConfirmationDialogDefaults.curvedTextStyle
     FailureConfirmationDialog(
         visible = true,

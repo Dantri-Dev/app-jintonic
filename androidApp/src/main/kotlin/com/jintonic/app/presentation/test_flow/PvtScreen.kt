@@ -69,6 +69,8 @@ private const val PULSE_MIN = 0.9f
 private const val PULSE_MAX = 1.08f
 private const val PULSE_MS = 850
 private const val STIMULUS_ICON_DP = 36
+// Below this much time left, don't start another stimulus: it would overrun the session clock.
+private const val MIN_RESPONSE_WINDOW_MS = 800L
 
 @Composable
 fun PvtScreen(vm: TestFlowViewModel, onFinished: () -> Unit) {
@@ -223,22 +225,24 @@ private suspend fun runPvt(
     while (remaining() > 0) {
         // A tap while waiting is a false start.
         val early = withTimeoutOrNull(minOf(nextDelay(), remaining())) { taps.receive() }
-        if (early != null) {
-            trials += PvtTrial(stimulusAtMs = early, responseAtMs = early, falseStart = true)
-        } else if (remaining() > 0) {
-            trials += presentStimulus(taps, onStimulus)
+        when {
+            early != null -> trials += PvtTrial(stimulusAtMs = early, responseAtMs = early, falseStart = true)
+            // Only present when a fair response window still fits, and cap it to what's left:
+            // this keeps the session from overrunning its clock by a full timeout at the end.
+            remaining() >= MIN_RESPONSE_WINDOW_MS ->
+                trials += presentStimulus(taps, onStimulus, minOf(Constants.TIMEOUT_MS, remaining()))
         }
     }
     return trials
 }
 
 // Stamps the stimulus after its frame is drawn, not when it is requested.
-private suspend fun presentStimulus(taps: Channel<Long>, onStimulus: (Boolean) -> Unit): PvtTrial {
+private suspend fun presentStimulus(taps: Channel<Long>, onStimulus: (Boolean) -> Unit, maxWaitMs: Long): PvtTrial {
     onStimulus(true)
     withFrameNanos { }
     withFrameNanos { }
     val shownAt = SystemClock.uptimeMillis()
-    val response = withTimeoutOrNull(Constants.TIMEOUT_MS) { taps.receive() }
+    val response = withTimeoutOrNull(maxWaitMs) { taps.receive() }
     onStimulus(false)
     return PvtTrial(stimulusAtMs = shownAt, responseAtMs = response)
 }
