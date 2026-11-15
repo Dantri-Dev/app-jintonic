@@ -1,4 +1,4 @@
-package com.jintonic.app.ui.components
+package com.jintonic.app.presentation.components
 
 import android.os.SystemClock
 import androidx.compose.animation.core.Spring
@@ -101,11 +101,17 @@ fun AppFilledTonalButton(onClick: () -> Unit, modifier: Modifier = Modifier, con
 }
 
 @Composable
-fun AppEdgeButton(onClick: () -> Unit, modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
+fun AppEdgeButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    colors: ButtonColors = ButtonDefaults.buttonColors(),
+    content: @Composable RowScope.() -> Unit,
+) {
     val source = remember { MutableInteractionSource() }
     EdgeButton(
         onClick = debouncedHaptic(onClick),
         modifier = modifier.pressBounce(source),
+        colors = colors,
         interactionSource = source,
         content = content,
     )

@@ -1,4 +1,4 @@
-package com.jintonic.app.ui.test_flow
+package com.jintonic.app.presentation.test_flow
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
@@ -23,27 +23,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-data class PreTestForm(
-    val sleepHours: Float = AppConstants.SLEEP_DEFAULT_HOURS,
-    val mood: Int = AppConstants.MOOD_DEFAULT,
-)
-
 data class TestOutcome(val cognitive: CognitiveAssessment, val result: PvtResult)
 
-// One ViewModel for the whole flow: Pre-test -> PVT -> Result.
+// One ViewModel for the whole flow: optional pre-flight -> PVT -> result.
 class TestFlowViewModel(
     private val store: SessionStore,
     private val vitals: VitalsMonitor,
     private val engineFactory: () -> FitForDutyEngine,
     private val context: Context,
 ) : ViewModel() {
-
-    private val _form = MutableStateFlow(PreTestForm())
-    val form: StateFlow<PreTestForm> = _form.asStateFlow()
 
     private val _state = MutableStateFlow<ResultState<TestOutcome>>(ResultState.Idle)
     val state: StateFlow<ResultState<TestOutcome>> = _state.asStateFlow()
@@ -58,9 +49,15 @@ class TestFlowViewModel(
         _state.value = ResultState.Idle
     }
 
-    fun setSleep(hours: Float) = _form.update { it.copy(sleepHours = hours) }
-
-    fun setMood(mood: Int) = _form.update { it.copy(mood = mood) }
+    // Persists the pre-flight parameters so the health assessment uses them for this test.
+    fun savePreflight(glucoseMgDl: Int, stress: Int, exerciseMinPerDay: Int) {
+        viewModelScope.launch {
+            val current = store.manual.first()
+            store.saveManual(
+                current.copy(glucoseMgDl = glucoseMgDl, stress = stress, exerciseMinPerDay = exerciseMinPerDay),
+            )
+        }
+    }
 
     fun nextStimulusDelayMs(): Long = engine.nextStimulusDelayMs()
 
@@ -77,12 +74,11 @@ class TestFlowViewModel(
     }
 
     private suspend fun assessAndSave(trials: List<PvtTrial>): TestOutcome {
-        val form = _form.value
         val past = store.sessions.first()
         val result = engine.evaluate(trials)
         val cognitive = engine.assessCognitive(
             result = result,
-            answers = PreTestAnswers(form.sleepHours, form.mood),
+            answers = PreTestAnswers(AppConstants.SLEEP_DEFAULT_HOURS, AppConstants.MOOD_DEFAULT),
             history = past.map { it.pvt.toResult() },
         )
         val snapshot = vitals.state.value
@@ -93,8 +89,8 @@ class TestFlowViewModel(
                 timestampMs = System.currentTimeMillis(),
                 mode = mode.name,
                 pvt = PvtSnapshot.from(result),
-                sleepHours = form.sleepHours,
-                mood = form.mood,
+                sleepHours = AppConstants.SLEEP_DEFAULT_HOURS,
+                mood = AppConstants.MOOD_DEFAULT,
                 cognitiveScore = cognitive.score,
                 status = cognitive.status.name,
                 escalated = cognitive.escalateToSurgeon,

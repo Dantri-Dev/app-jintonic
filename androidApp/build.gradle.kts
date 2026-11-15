@@ -26,6 +26,7 @@ dependencies {
     implementation(libs.wear.compose.foundation)
     implementation(libs.wear.compose.navigation)
     implementation(libs.compose.material.icons.extended)
+    implementation(libs.androidx.graphics.shapes)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

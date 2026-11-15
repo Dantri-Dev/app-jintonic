@@ -3,7 +3,7 @@ package com.jintonic.app.core.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.wear.compose.material3.AppScaffold
-import com.jintonic.app.ui.theme.AppTheme
+import com.jintonic.app.presentation.theme.AppTheme
 
 // Round (large/small) + square watch faces, so every screen is checked on all shapes at once.
 @Preview(name = "Round (large)", device = "id:wearos_large_round", showSystemUi = true, showBackground = true, backgroundColor = 0xFF000000)

@@ -8,8 +8,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.content.ContextCompat
 import com.jintonic.app.data.sensors.VitalsMonitor
-import com.jintonic.app.ui.navigation.AppNavHost
-import com.jintonic.app.ui.theme.AppTheme
+import com.jintonic.app.presentation.navigation.AppNavHost
+import com.jintonic.app.presentation.theme.AppTheme
 import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
@@ -18,14 +18,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val alreadyGranted = hasHeartRatePermission()
-        if (alreadyGranted) vitals.start(sensorPermitted = true)
+        val sensor = heartRatePermission()
+        val permissions = requiredPermissions(sensor)
+        if (isGranted(sensor)) vitals.start(sensorPermitted = true)
         setContent {
             AppTheme {
                 AppNavHost(
-                    heartRatePermission = heartRatePermission(),
-                    hasPermission = alreadyGranted,
-                    // Denied (or permanently denied): HR falls back to simulation, labelled in Parametri.
+                    permissions = permissions,
+                    sensorPermission = sensor,
+                    hasPermission = permissions.all { isGranted(it) },
+                    // Denied (or permanently denied): HR falls back to simulation.
                     onPermissionResult = { granted -> vitals.start(sensorPermitted = granted) },
                 )
             }
@@ -37,8 +39,16 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 
-    private fun hasHeartRatePermission() =
-        ContextCompat.checkSelfPermission(this, heartRatePermission()) == PackageManager.PERMISSION_GRANTED
+    private fun isGranted(permission: String) =
+        ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+
+    // Every runtime permission the app needs: the heart-rate sensor, plus notifications where they are requestable.
+    private fun requiredPermissions(sensor: String): Array<String> =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arrayOf(sensor, Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            arrayOf(sensor)
+        }
 
     // Granular health permission on newer platforms, body sensors before.
     private fun heartRatePermission(): String =
