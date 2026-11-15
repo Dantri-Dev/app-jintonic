@@ -44,6 +44,8 @@ import com.jintonic.app.pvt.TestStatus
 
 private const val SUCCESS_CLOSE_MS = 220
 private const val SUCCESS_CLOSE_SCALE = 0.8f
+// A touch shorter than the native 4s default, so the result lingers but does not drag.
+private const val RESULT_DURATION_MS = 3_000L
 private const val WARNING_DIAMOND_DP = 80
 private const val WARNING_ICON_DP = 36
 
@@ -91,6 +93,7 @@ private fun SuccessResult(text: String, onDone: () -> Unit) {
     SuccessConfirmationDialog(
         visible = visible,
         onDismissRequest = { visible = false },
+        durationMillis = RESULT_DURATION_MS,
         modifier = Modifier.scale(scale),
         curvedText = { confirmationDialogCurvedText(text, style) },
         colors = ConfirmationDialogDefaults.colors(
@@ -107,6 +110,7 @@ private fun FailureResult(text: String, onDone: () -> Unit) {
     FailureConfirmationDialog(
         visible = true,
         onDismissRequest = onDone,
+        durationMillis = RESULT_DURATION_MS,
         curvedText = { confirmationDialogCurvedText(text, style) },
         colors = ConfirmationDialogDefaults.colors(
             iconColor = AppColors.OnBackground,
@@ -125,6 +129,7 @@ private fun WarningResult(text: String, onDone: () -> Unit) {
     ConfirmationDialog(
         visible = true,
         onDismissRequest = onDone,
+        durationMillis = RESULT_DURATION_MS,
         curvedText = { confirmationDialogCurvedText(text, style) },
         // Transparent container hides the native hero shape; the diamond below is the whole mark.
         colors = ConfirmationDialogDefaults.colors(
